@@ -1,0 +1,42 @@
+#lang racket
+
+
+(require parser-tools/lex
+         (prefix-in : parser-tools/lex-sre)
+         parser-tools/yacc)
+
+(define simple-math-lexer
+           (lexer
+            ((:or (:+ (char-range #\0 #\9)) (:: (:+ (char-range #\0 #\9)) #\. (:+ (char-range #\0 #\9)))) (token-NUM (string->number lexeme)))
+            ("+" (token-plus))
+            ("==" (token-eq))
+            ("=" (token-assign))
+            ("-" (token-neg))
+            ("*" (token-mult))
+            ("/" (token-div))
+            ("<" (token-less))
+            (">" (token-more))
+            ("!=" (token-neq))
+            ("(" (token-lpar))
+            (whitespace (simple-math-lexer input-port))
+            ((eof) (token-EOF))))
+
+(define-tokens a (NUM))
+(define-empty-tokens b (EOF plus neg assign eq mult div less more neq lpar))
+
+
+;test
+(define lex-this (lambda (lexer input) (lambda () (lexer input))))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "!=(1.9-2+ 3 +   =4==")))
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
+(my-lexer)
