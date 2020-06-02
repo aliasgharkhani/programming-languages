@@ -61,14 +61,14 @@
            (exp ((aexp) $1) ((aexp more aexp) (list '> $1 $3)) ((aexp less aexp) (list '< $1 $3)) ((aexp eq aexp) (list 'eq? $1 $3)) ((aexp neq aexp) (list 'neq? $1 $3)))
            (aexp ((bexp) $1) ((bexp neg aexp) (list '- $1 $3)) ((bexp plus aexp) (list '+ $1 $3)))
            (bexp ((cexp) $1) ((cexp mult bexp) (list '* $1 $3)) ((cexp div bexp) (list '/ $1 $3)))
-           (cexp ((neg cexp) $2) ((lpar exp rpar) (list $2)) ((posnumber) $1) ((null) 'null) ((var) $1) ((true) '#t) ((false) '#f) ((string) $1) ((list) $1) ((var listmem) (list 'define $2 'null)))
+           (cexp ((neg cexp) (list '- 0 $2)) ((lpar exp rpar) (list $2)) ((posnumber) $1) ((null) 'null) ((var) $1) ((true) '#t) ((false) '#f) ((string) $1) ((list) $1) ((var listmem) (list 'list-ref $1 $2)))
            (list ((lbrack listvalues rbrack) (list $2)) ((lbrack rbrack) (list)))
            (listvalues ((exp) $1) ((exp camma listvalues) (list $1 $3)))
-           (listmem ((lbrack exp rbrack) (list $2)) ((lbrack exp rbrack listmem) (list list($2) $4)))
+           (listmem ((lbrack exp rbrack) (list $2)) ((lbrack exp rbrack listmem) (list $2 $4)))
              )))
 
 ;test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "if 5-9 then r=4 else return 1 endif")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "b = a[9][8][7]")))
 (let ((parser-res (simple-math-parser my-lexer))) parser-res)
 

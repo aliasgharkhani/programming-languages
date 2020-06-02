@@ -46,7 +46,7 @@
 
 ;test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "return null")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "[7]")))
 (my-lexer)
 (my-lexer)
 (my-lexer)
