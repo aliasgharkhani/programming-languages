@@ -56,9 +56,9 @@
            (unitcom ((whilecom) $1) ((ifcom) $1) ((assign) $1) ((return) $1))
            (whilecom ((while exp do command end) (list 'while ($2) ($4))))
            (ifcom ((if exp then command else command endif) (list 'if (list $2) (list $4) (list $6))))
-           (assign ((var eq-assign exp) (list 'define $1 $3)))
-           (return ((returnt exp) $2))
-           (exp ((aexp) $1) ((aexp more aexp) (list '> $1 $3)) ((aexp less aexp) (list '< $1 $3)) ((aexp eq aexp) (list 'eq? $1 $3)) ((aexp neq aexp) (list 'neq? $1 $3)))
+           (assign ((var eq-assign exp) (list 'assign $1 $3)))
+           (return ((returnt exp) (list 'return $2)))
+           (exp ((aexp) $1) ((aexp more aexp) (list 'more? $1 $3)) ((aexp less aexp) (list 'less? $1 $3)) ((aexp eq aexp) (list 'equal? $1 $3)) ((aexp neq aexp) (list 'nequal? $1 $3)))
            (aexp ((bexp) $1) ((bexp neg aexp) (list '- $1 $3)) ((bexp plus aexp) (list '+ $1 $3)))
            (bexp ((cexp) $1) ((cexp mult bexp) (list '* $1 $3)) ((cexp div bexp) (list '/ $1 $3)))
            (cexp ((neg cexp) (list '- 0 $2)) ((lpar exp rpar) (list $2)) ((posnumber) $1) ((null) 'null) ((var) $1) ((true) '#t) ((false) '#f) ((string) $1) ((list) $1) ((var listmem) (list 'list-ref $1 $2)))
@@ -69,6 +69,6 @@
 
 ;test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "b = a[9][8][7]")))
+(define my-lexer (lex-this simple-math-lexer (open-input-string "return a==9")))
 (let ((parser-res (simple-math-parser my-lexer))) parser-res)
 
