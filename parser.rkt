@@ -1,4 +1,5 @@
 #lang racket
+(provide my-parser)
 
 
 (require parser-tools/lex
@@ -69,6 +70,6 @@
 
 ;
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this simple-math-lexer (open-input-string "return 5")))
-(let ((parser-res (simple-math-parser my-lexer))) parser-res)
-
+;(define my-lexer (lex-this simple-math-lexer (open-input-string "if 1==3 then a=4 else b=0 endif")))
+;(let ((parser-res (simple-math-parser my-lexer))) parser-res)
+(define (my-parser input-str) (let ((parser-res (simple-math-parser (lex-this simple-math-lexer (open-input-string input-str))))) parser-res)) 
