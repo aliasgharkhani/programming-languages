@@ -1,3 +1,6 @@
+#lang racket
+(require racket/include)
+(require "parser.rkt")
 ;predicators
 (define program?
   (lambda (command)
@@ -10,13 +13,13 @@
   (lambda (unitcom) (or (while-com? unitcom) (if-com? unitcom) (assign? unitcom) (return? unitcom))))
 
 (define while-com?
-  (lambda (unit-com) (eqv? (car (unit-com)) 'while)))
+  (lambda (unit-com) (eqv? (car unit-com) 'while)))
 
 (define if-com?
-  (lambda (unit-com) (eqv? (car (unit-com)) 'if)))
+  (lambda (unit-com) (eqv? (car unit-com) 'if)))
 
 (define assign?
-  (lambda (unit-com) (eqv? (car (unit-com)) 'assign)))
+  (lambda (unit-com) (eqv? (car unit-com) 'assign)))
 
 (define return?
   (lambda (unit-com) (eqv? (car unit-com) 'return)))
@@ -69,10 +72,10 @@
   (lambda (unit-com) (caadr unit-com)))
 
 (define if-com->com1
-  (lambda (unit-com) (caaddr unit-com)))
+  (lambda (unit-com) (caddar unit-com)))
 
 (define if-com->com2
-  (lambda (unit-com) (caadddr unit-com)))
+  (lambda (unit-com) (cdddar unit-com)))
 
 (define assign->var
   (lambda (unit-com) (cadr unit-com)))
@@ -116,30 +119,37 @@
 
 
 
+(define init-env '())
+(define (extend-env name value env) (cons (cons name value) env))
+(define (apply-env name env) (cond ((assq name env) => cdr) (else #f)))
 
 
 ;interpreter
 
 (define run
   (lambda (string)
-    (value-of-program (lexer-parser string))))
+    (value-of-program (my-parser string))))
 
 (define value-of-program
   (lambda (pgm)
     (cond
-      ((program? pgm) (value-of pgm (init-env))))
-    ))
+      ((program? pgm) (value-of pgm init-env ))))
+    )
 
 (define value-of
   (lambda (unitcom env)
     (cond
-      ((while-com? unitcom) (??????????))
-      ((if-com? unitcom) (let ((exp (value-of (cadr unitcom) env)))
+      ((while-com? unitcom) ('()));todo
+      ((if-com? unitcom) (let ((exp (value-of (if-com->exp unitcom) env)))
                            (if (exp)
-                               (value-of (caddr unitcom) env)
-                               (value-of (cadddr unitcom) env))))
-      ((assign? unitcom) (extend-env (cadr unitcom) (value-of (caddr unitcom) env)))
-      ((return? unitcom) (value-of (cadr unitcom)))
+                               (value-of (if-com->com1 unitcom) env)
+                               (value-of (if-com->com2 unitcom) env))))
+							   
+      ((assign? unitcom) (extend-env (assign->var unitcom) (value-of (assign->exp unitcom) env)))
+      ((return? unitcom) (value-of (return->exp unitcom)))
+	  ((more? unitcom) '())
       
       )))
 
+
+(define (evaluate path) (run (file->string path)))
