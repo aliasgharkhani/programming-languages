@@ -72,10 +72,10 @@
   (lambda (unit-com) (caadr unit-com)))
 
 (define if-com->com1
-  (lambda (unit-com) (caddar unit-com)))
+  (lambda (unit-com) (caaddr unit-com)))
 
 (define if-com->com2
-  (lambda (unit-com) (cdddar unit-com)))
+  (lambda (unit-com) (caar (cdddr unit-com))))
 
 (define assign->var
   (lambda (unit-com) (cadr unit-com)))
@@ -120,33 +120,11 @@
 
 
 
-
-
 ;helper functions
 
 (define init-env '())
-(define (extend-env name value env) (cons (cons name value) env))
-(define (apply-env name env) (cond ((assq name env) => cdr) (else #f)))
-
-(define (list-greater-than-string ls str)(cond
-                                            [(null? ls) #t]
-                                            [(string<=? (car ls) str) #f]
-                                            [else (list-greater-than-string (cdr ls) str)]
-                                            ))
-
-(define (list-less-than-string ls str)(cond
-                                            [(null? ls) #t]
-                                            [(string>=? (car ls) str) #f]
-                                            [else (list-less-than-string (cdr ls) str)]
-                                            ))
-
-(define (list-equal-string ls str)(cond
-                                            [(null? ls) #t]
-                                            [(not (string? (car ls))) #f]
-                                            [(not (string=? (car ls) str)) #f]
-                                            [else (list-equal-string (cdr ls) str)]
-                                            ))
-
+(define (extend-env var value env) (append env (list (list var value))))
+(define (apply-env var env) (cond ((assq var env) => cadr) (else #f)))
 
 (define (list-greater-than-number ls number)(cond
                                             [(null? ls) #t]
@@ -160,16 +138,18 @@
                                             [else (list-less-than-number (cdr ls) number)]
                                             ))
 
-(define (list-equal-number ls number)(cond
-                                            [(null? ls) #t]
-                                            [(not (number? (car ls))) #f]
-                                            [(not (= (car ls) number)) #f]
-                                            [else (list-equal-number (cdr ls) number)]
-                                            ))
-                                          
-                                          
-                                          
 
+(define (list-greater-than-string ls str)(cond
+                                            [(null? ls) #t]
+                                            [(string<=? (car ls) str) #f]
+                                            [else (list-greater-than-string (cdr ls) str)]
+                                            ))
+
+(define (list-less-than-string ls str)(cond
+                                            [(null? ls) #t]
+                                            [(string>=? (car ls) str) #f]
+                                            [else (list-less-than-string (cdr ls) str)]
+                                            ))
 (define (list-equal-list ls1 ls2) (cond [(and (null? ls1 )(null? ls2)) #t]
                                     [(null? ls1) #f]
                                     [(null? ls2) #f]
@@ -178,57 +158,103 @@
                                ))
 
 
-(define (list-equal-exp ls exp)(cond
+(define (list-equal-number ls number)(cond
                                             [(null? ls) #t]
-                                            
-                                            [(not (eq? (car ls) exp)) #f]
-                                            [else (list-equal-exp (cdr ls) exp)]
+                                            [(not (number? (car ls))) #f]
+                                            [(not (= (car ls) number)) #f]
+                                            [else (list-equal-number (cdr ls) number)]
+                                            ))
+
+(define (list-equal-string ls str)(cond
+                                            [(null? ls) #t]
+                                            [(not (string? (car ls))) #f]
+                                            [(not (string=? (car ls) str)) #f]
+                                            [else (list-equal-string (cdr ls) str)]
                                             ))
 
 
+(define (list-equal-bool ls bool)(cond
+                                            [(null? ls) #t]
+                                            
+                                            [(not (eq? (car ls) bool)) #f]
+                                            [else (list-equal-bool (cdr ls) bool)]
+                                            ))
 
 
-(define (reverse x) (cond
+(define (list-equal-null ls null)(cond
+                                            [(null? ls) #t]
+                                            
+                                            [(not (eq? (car ls) null)) #f]
+                                            [else (list-equal-null (cdr ls) null)]
+                                            ))
+
+(define (mul-list-num x1 x2)
+  (cond
+    [(list? x1) (map (lambda (n) (* x2 n)) x1)]
+    [else (map (lambda (n) (* x1 n)) x2)]))
+
+(define (add-list-num x1 x2)
+  (cond
+    [(list? x1) (map (lambda (n) (+ x2 n)) x1)]
+    [else (map (lambda (n) (+ x1 n)) x2)]))
+
+(define (sub-list-num x1 x2)
+  (cond
+    [(list? x1) (map (lambda (n) (- n x2)) x1)]
+    [else (map (lambda (n) (- x1 n)) x2)]))
+
+(define (div-list-num x1 x2)
+  (cond
+    [(list? x1) (map (lambda (n) (/ n x2)) x1)]
+    [else (map (lambda (n) (/ x1 n)) x2)]))
+
+(define (bool-plus-bool bool1 bool2)
+  (or bool1 bool2))
+
+(define (bool-mul-bool bool1 bool2)
+  (and bool1 bool2))
+
+(define (bool-plus-list x1 x2)
+   (cond
+    [(list? x1) (map (lambda (n) (or n x2)) x1)]
+    [else (map (lambda (n) (or x1 n)) x2)]))
+
+(define (bool-mul-list x1 x2)
+   (cond
+    [(list? x1) (map (lambda (n) (and n x2)) x1)]
+    [else (map (lambda (n) (and x1 n)) x2)]))
+
+(define (string-plus-string s1 s2)
+  (string-append s1 s2))
+
+(define (string-plus-list x1 x2)
+   (cond
+    [(list? x1) (map (lambda (n) (string-append x2 n)) x1)]
+    [else (map (lambda (n) (string-append x1 n)) x2)]))
+
+(define (list-plus-list l1 l2)
+  (append l1 l2))
+
+
+(define (reverse-list x) (cond
                            [ (null? x) '()]
-                           [ else (cond [(list? (car x)) (append (reverse (cdr x)) (list (reverse (car x))))]
-                                       [else  (append (reverse (cdr x)) (list (car x)))])]))
+                           [ else (cond [(list? (car x)) (append (reverse-list (cdr x)) (list (reverse-list (car x))))]
+                                       [else  (append (reverse-list (cdr x)) (list (car x)))])]))
 
-
-(define (mul-list lst x)
-  (map (lambda (n) (* x n)) lst))
-(define (add-list lst x)
-  (map (lambda (n) (+ x n)) lst))
-(define (sub-list-from-number lst x)
-  (map (lambda (n) (- n x)) lst))
-(define (sub-number-from-list lst x)
-  (map (lambda (n) (- x n)) lst))
-
-(define (div-list-by-number lst x)
-  (map (lambda (n) (/ n x)) lst))
-(define (div-number-by-list lst x)
-  (map (lambda (n) (/ x n)) lst))
-
-
-(define (bool-plus-list lst x)
-  (map (lambda (n) (or x n)) lst))
-(define (bool-mul-list lst x)
-  (map (lambda (n) (and x n)) lst))
-
-(define (string-plus-list lst x)
-  (map (lambda (n) (string-append x n)) lst))
-(define (list-plus-string lst x)
-  (map (lambda (n) (string-append n x)) lst))
 ;interpreter
 
 (define run
   (lambda (string)
-    (value-of-program (my-parser string))))
+    (value-of-program (my-parser string) init-env)))
 
 (define value-of-program
-  (lambda (pgm)
+  (lambda (pgm env)
     (cond
-      ((program? pgm) (value-of pgm init-env ))))
-    )
+      ((program? pgm) (cond
+                        [(null? (cdr pgm)) (value-of (car pgm) env)]
+                        [(return? (car pgm)) (value-of (car pgm) env)])
+    ))))
+
 
 (define value-of
   (lambda (unitcom env)
@@ -267,7 +293,7 @@
                               [(and (boolean? aexp1) (boolean? aexp2)) (eq? aexp1 aexp2)]
                               [(and (list? aexp1) (list? aexp2))(list-equal-list aexp1 aexp2)]
                               
-                              [(and (list? aexp1) (or (number? aexp2) (string? aexp2) (boolean? aexp2) (null? aexp2))) (list-equal-exp aexp1 aexp2)]
+                              [(and (list? aexp1) (or (number? aexp2) (string? aexp2) (boolean? aexp2) (null? aexp2))) (list-equal-bool aexp1 aexp2)]
                               
                               [else #f]
                               )))
@@ -281,7 +307,7 @@
                               (cond
                               [(number? cexp) (* -1 cexp)]
                               [(boolean? cexp) (not cexp)]
-                              [(list? cexp) (reverse cexp)]) 
+                              [(list? cexp) (reverse-list cexp)]) 
       
       
                               ))
@@ -293,13 +319,13 @@
                                 [(and (boolean? cexp) (boolean? bexp)) (or cexp bexp)]
                                 [(and (string? cexp) (string? bexp)) (string-append cexp bexp)]
                                 
-                                [(and (number? cexp) (list? bexp)) (add-list bexp cexp)]
-                                [(and (list? cexp) (number? bexp)) (add-list cexp bexp)]
+                                [(and (number? cexp) (list? bexp)) (add-list-num bexp cexp)]
+                                [(and (list? cexp) (number? bexp)) (add-list-num cexp bexp)]
 
                                 [(and (boolean? cexp) (list? bexp)) (bool-plus-list bexp cexp)]
                                 [(and (list? cexp) (boolean? bexp)) (bool-plus-list cexp bexp)]
                                 [(and (string? cexp) (list? bexp)) (string-plus-list bexp cexp)]
-                                [(and (list? cexp) (string? bexp)) (list-plus-string cexp bexp)]
+                                [(and (list? cexp) (string? bexp)) (string-plus-list cexp bexp)]
                                 [(and (list? cexp) (list? bexp)) (append cexp bexp)]
                                 )
                                 
@@ -311,8 +337,8 @@
                                 
                                 [(and (number? cexp) (number? bexp)) (- cexp bexp)]                             
                                 
-                                [(and (list? cexp) (number? bexp)) (sub-list-from-number cexp bexp)]
-                                [(and (number? cexp) (list? bexp)) (sub-number-from-list bexp cexp)]
+                                [(and (list? cexp) (number? bexp)) (sub-list-num cexp bexp)]
+                                [(and (number? cexp) (list? bexp)) (sub-list-num bexp cexp)]
                                 )
                                 
       
@@ -326,8 +352,8 @@
                                 [(and (boolean? cexp) (boolean? bexp)) (and cexp bexp)]
                                 [(and (string? cexp) (string? bexp)) (string-append cexp bexp)]
                                 
-                                [(and (number? cexp) (list? bexp)) (mul-list bexp cexp)]
-                                [(and (list? cexp) (number? bexp)) (mul-list cexp bexp)]
+                                [(and (number? cexp) (list? bexp)) (mul-list-num bexp cexp)]
+                                [(and (list? cexp) (number? bexp)) (mul-list-num cexp bexp)]
 
                                 [(and (boolean? cexp) (list? bexp)) (bool-mul-list bexp cexp)]
                                 [(and (list? cexp) (boolean? bexp)) (bool-mul-list cexp bexp)]
@@ -342,8 +368,8 @@
                                 
                                 [(and (number? cexp) (number? bexp)) (/ cexp bexp)]                             
                                
-                                [(and (list? cexp) (number? bexp)) (div-list-by-number cexp bexp)]
-                                [(and (number? cexp) (list? bexp)) (div-number-by-list bexp cexp)]) 
+                                [(and (list? cexp) (number? bexp)) (div-list-num cexp bexp)]
+                                [(and (number? cexp) (list? bexp)) (div-list-num bexp cexp)]) 
       
       
                               ))
