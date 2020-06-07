@@ -119,11 +119,105 @@
 
 
 
+
+
+
+;helper functions
+
 (define init-env '())
 (define (extend-env name value env) (cons (cons name value) env))
 (define (apply-env name env) (cond ((assq name env) => cdr) (else #f)))
 
+(define (list-greater-than-string ls str)(cond
+                                            [(null? ls) #t]
+                                            [(string<=? (car ls) str) #f]
+                                            [else (list-greater-than-string (cdr ls) str)]
+                                            ))
 
+(define (list-less-than-string ls str)(cond
+                                            [(null? ls) #t]
+                                            [(string>=? (car ls) str) #f]
+                                            [else (list-less-than-string (cdr ls) str)]
+                                            ))
+
+(define (list-equal-string ls str)(cond
+                                            [(null? ls) #t]
+                                            [(not (string? (car ls))) #f]
+                                            [(not (string=? (car ls) str)) #f]
+                                            [else (list-equal-string (cdr ls) str)]
+                                            ))
+
+
+(define (list-greater-than-number ls number)(cond
+                                            [(null? ls) #t]
+                                            [(<= (car ls) number) #f]
+                                            [else (list-greater-than-number (cdr ls) number)]
+                                            ))
+
+(define (list-less-than-number ls number)(cond
+                                            [(null? ls) #t]
+                                            [(>= (car ls) number) #f]
+                                            [else (list-less-than-number (cdr ls) number)]
+                                            ))
+
+(define (list-equal-number ls number)(cond
+                                            [(null? ls) #t]
+                                            [(not (number? (car ls))) #f]
+                                            [(not (= (car ls) number)) #f]
+                                            [else (list-equal-number (cdr ls) number)]
+                                            ))
+                                          
+                                          
+                                          
+
+(define (list-equal-list ls1 ls2) (cond [(and (null? ls1 )(null? ls2)) #t]
+                                    [(null? ls1) #f]
+                                    [(null? ls2) #f]
+                                    [(not (eq? (car ls1) (car ls2))) #f]
+                                    [else (list-equal-list (cdr ls1) (cdr ls2))]
+                               ))
+
+
+(define (list-equal-exp ls exp)(cond
+                                            [(null? ls) #t]
+                                            
+                                            [(not (eq? (car ls) exp)) #f]
+                                            [else (list-equal-exp (cdr ls) exp)]
+                                            ))
+
+
+
+
+(define (reverse x) (cond
+                           [ (null? x) '()]
+                           [ else (cond [(list? (car x)) (append (reverse (cdr x)) (list (reverse (car x))))]
+                                       [else  (append (reverse (cdr x)) (list (car x)))])]))
+
+
+(define (mul-list lst x)
+  (map (lambda (n) (* x n)) lst))
+(define (add-list lst x)
+  (map (lambda (n) (+ x n)) lst))
+(define (sub-list-from-number lst x)
+  (map (lambda (n) (- n x)) lst))
+(define (sub-number-from-list lst x)
+  (map (lambda (n) (- x n)) lst))
+
+(define (div-list-by-number lst x)
+  (map (lambda (n) (/ n x)) lst))
+(define (div-number-by-list lst x)
+  (map (lambda (n) (/ x n)) lst))
+
+
+(define (bool-plus-list lst x)
+  (map (lambda (n) (or x n)) lst))
+(define (bool-mul-list lst x)
+  (map (lambda (n) (and x n)) lst))
+
+(define (string-plus-list lst x)
+  (map (lambda (n) (string-append x n)) lst))
+(define (list-plus-string lst x)
+  (map (lambda (n) (string-append n x)) lst))
 ;interpreter
 
 (define run
@@ -147,9 +241,121 @@
 							   
       ((assign? unitcom) (extend-env (assign->var unitcom) (value-of (assign->exp unitcom) env)))
       ((return? unitcom) (value-of (return->exp unitcom)))
-	  ((more? unitcom) '())
       
-      )))
+      ((more? unitcom) (let ([aexp1 (exp->aexp1 unitcom)] [aexp2 (exp->aexp2 unitcom)])
+                              (cond 
+                              [(and (number? aexp1) (number? aexp2)) (> aexp1 aexp2)]
+                              [(and (string? aexp1) (string? aexp2)) (string>? aexp1 aexp2)]
+                              [(and (list? aexp1) (string? aexp2)) (list-greater-than-string aexp1 aexp2)]
+                              [(and (list? aexp1) (number? aexp2)) (list-greater-than-number aexp1 aexp2)]
+                              )))
+
+      ((less? unitcom) (let ([aexp1 (exp->aexp1 unitcom)] [aexp2 (exp->aexp2 unitcom)])
+                              (cond 
+                              [(and (number? aexp1) (number? aexp2)) (< aexp1 aexp2)]
+                              [(and (string? aexp1) (string? aexp2)) (string<? aexp1 aexp2)]
+                              [(and (list? aexp1) (string? aexp2)) (list-less-than-string aexp1 aexp2)]
+                              [(and (list? aexp1) (number? aexp2)) (list-less-than-number aexp1 aexp2)]
+                              )))
+
+    
+      ((equal? unitcom) (let ([aexp1 (exp->aexp1 unitcom)] [aexp2 (exp->aexp2 unitcom)])
+                              (cond 
+                              [(and (number? aexp1) (number? aexp2)) (= aexp1 aexp2)]
+                              [(and (string? aexp1) (string? aexp2)) (string=? aexp1 aexp2)]
+                              [(and (null? aexp1) (null? aexp2)) #t]
+                              [(and (boolean? aexp1) (boolean? aexp2)) (eq? aexp1 aexp2)]
+                              [(and (list? aexp1) (list? aexp2))(list-equal-list aexp1 aexp2)]
+                              
+                              [(and (list? aexp1) (or (number? aexp2) (string? aexp2) (boolean? aexp2) (null? aexp2))) (list-equal-exp aexp1 aexp2)]
+                              
+                              [else #f]
+                              )))
+
+      
+      ;((nequal? unitcom) (let ([aexp1 (exp->aexp1 unitcom)] [aexp2 (exp->aexp2 unitcom)])
+       ;                       (not (value-of equal-string))))
+
+
+      ((symmetric? unitcom) (let ([cexp (cexp->cexp unitcom)] )
+                              (cond
+                              [(number? cexp) (* -1 cexp)]
+                              [(boolean? cexp) (not cexp)]
+                              [(list? cexp) (reverse cexp)]) 
+      
+      
+                              ))
+
+      ((add? unitcom) (let ([cexp (bexp->cexp unitcom)] [bexp (bexp->bexp unitcom)])
+                              (cond
+                                [(and (number? cexp) (number? bexp)) (+ cexp bexp)]
+                                
+                                [(and (boolean? cexp) (boolean? bexp)) (or cexp bexp)]
+                                [(and (string? cexp) (string? bexp)) (string-append cexp bexp)]
+                                
+                                [(and (number? cexp) (list? bexp)) (add-list bexp cexp)]
+                                [(and (list? cexp) (number? bexp)) (add-list cexp bexp)]
+
+                                [(and (boolean? cexp) (list? bexp)) (bool-plus-list bexp cexp)]
+                                [(and (list? cexp) (boolean? bexp)) (bool-plus-list cexp bexp)]
+                                [(and (string? cexp) (list? bexp)) (string-plus-list bexp cexp)]
+                                [(and (list? cexp) (string? bexp)) (list-plus-string cexp bexp)]
+                                [(and (list? cexp) (list? bexp)) (append cexp bexp)]
+                                )
+                                
+      
+      
+                              ))
+      ((sub? unitcom) (let ([cexp (bexp->cexp unitcom)] [bexp (bexp->bexp unitcom)])
+                              (cond
+                                
+                                [(and (number? cexp) (number? bexp)) (- cexp bexp)]                             
+                                
+                                [(and (list? cexp) (number? bexp)) (sub-list-from-number cexp bexp)]
+                                [(and (number? cexp) (list? bexp)) (sub-number-from-list bexp cexp)]
+                                )
+                                
+      
+      
+                              ))
+
+      ((mult? unitcom) (let ([cexp (bexp->cexp unitcom)] [bexp (bexp->bexp unitcom)] )
+                              (cond
+                                [(and (number? cexp) (number? bexp)) (* cexp bexp)]
+                                
+                                [(and (boolean? cexp) (boolean? bexp)) (and cexp bexp)]
+                                [(and (string? cexp) (string? bexp)) (string-append cexp bexp)]
+                                
+                                [(and (number? cexp) (list? bexp)) (mul-list bexp cexp)]
+                                [(and (list? cexp) (number? bexp)) (mul-list cexp bexp)]
+
+                                [(and (boolean? cexp) (list? bexp)) (bool-mul-list bexp cexp)]
+                                [(and (list? cexp) (boolean? bexp)) (bool-mul-list cexp bexp)]
+                             
+                                )
+                                
+      
+      
+                              ))
+      ((div? unitcom) (let ([cexp (bexp->cexp unitcom)] [bexp (bexp->bexp unitcom)])
+                              (cond
+                                
+                                [(and (number? cexp) (number? bexp)) (/ cexp bexp)]                             
+                               
+                                [(and (list? cexp) (number? bexp)) (div-list-by-number cexp bexp)]
+                                [(and (number? cexp) (list? bexp)) (div-number-by-list bexp cexp)]) 
+      
+      
+                              ))
+
+      
+      
+      )
+
+    
+
+    
+    ))
 
 
 (define (evaluate path) (run (file->string path)))
