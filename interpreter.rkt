@@ -25,28 +25,28 @@
   (lambda (unit-com) (eqv? (car unit-com) 'return)))
 
 (define more?
-  (lambda (exp) (eqv? (car exp) 'more?)))
+  (lambda (exp) (eqv? (car exp) 'more)))
 
 (define less?
-  (lambda (exp) (eqv? (car exp) 'less?)))
+  (lambda (exp) (eqv? (car exp) 'less)))
 
 (define equal?
-  (lambda (exp) (eqv? (car exp) 'equal?)))
+  (lambda (exp) (eqv? (car exp) 'equal)))
 
 (define nequal?
-  (lambda (exp) (eqv? (car exp) 'nequal?)))
+  (lambda (exp) (eqv? (car exp) 'nequal)))
 
 (define sub?
-  (lambda (exp) (eqv? (car exp) 'sub?)))
+  (lambda (exp) (eqv? (car exp) 'sub)))
 
 (define add?
-  (lambda (exp) (eqv? (car exp) 'add?)))
+  (lambda (exp) (eqv? (car exp) 'add)))
 
 (define mult?
-  (lambda (exp) (eqv? (car exp) 'mult?)))
+  (lambda (exp) (eqv? (car exp) 'mult)))
 
 (define div?
-  (lambda (exp) (eqv? (car exp) 'div?)))
+  (lambda (exp) (eqv? (car exp) 'div)))
 
 (define symmetric?
   (lambda (exp) (eqv? (car exp) '-)))
@@ -58,7 +58,7 @@
   (lambda (exp) (eqv? (car exp) 'var)))
 
 (define var-listmem?
-  (lambda (cexp) (eqv? (car cexp) 'list-ref?)))
+  (lambda (cexp) (eqv? (car cexp) 'list-ref)))
 
 ;extractors
 
@@ -359,17 +359,27 @@
                                     [(and (number? cexp) (list? bexp)) (list env (div-list-num bexp cexp))]) 
                                   ))
                 [(var? program) (list env (apply-env (cexp->var program) env))]
-                [else (list env (program))]      
+                [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
+                [else (list env program)]      
                 )])
-      
-      
-    
-
-    
-
     
     )
   )
 
+
+
+(define (make-indices indices) (cond [(null?  (cdr indices)) indices]
+                                     [else (cons (car indices) (make-indices (cadr indices)))]
+                                     ))
+(define (list-index-1d lst index) (cond [(= 0 index) (car lst) ]
+                                     [else (list-index-1d (cdr lst) (- index 1))]
+                                     ))
+
+(define (list-index lst index) (cond [(null? (cdr index)) (list-index-1d lst (car index)) ]
+                                     [else (list-index (list-index-1d lst (car index)) (cdr index ))]
+                                     ))
+
+(define (values indices env)
+  (map (lambda (n) (cadr (value-of n env))) indices))
 
 (define (evaluate path) (run (file->string path)))
