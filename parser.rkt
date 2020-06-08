@@ -62,7 +62,7 @@
            (exp ((aexp) $1) ((aexp more aexp) (list 'more? $1 $3)) ((aexp less aexp) (list 'less? $1 $3)) ((aexp eq aexp) (list 'equal? $1 $3)) ((aexp neq aexp) (list 'nequal? $1 $3)))
            (aexp ((bexp) $1) ((bexp neg aexp) (list 'sub $1 $3)) ((bexp pos aexp) (list 'add $1 $3)))
            (bexp ((cexp) $1) ((cexp mult bexp) (list 'mult $1 $3)) ((cexp div bexp) (list 'div $1 $3)))
-           (cexp ((neg cexp) (list '- $2)) ((lpar exp rpar) (list $2)) ((posnumber) $1) ((null) null) ((var) $1) ((true) '#t) ((false) '#f) ((string) $1) ((list) $1) ((var listmem) (list 'list-ref $1 $2)))
+           (cexp ((neg cexp) (list '- $2)) ((lpar exp rpar) (list $2)) ((posnumber) $1) ((null) null) ((var) (list 'var $1)) ((true) '#t) ((false) '#f) ((string) $1) ((list) $1) ((var listmem) (list 'list-ref $1 $2)))
            (list ((lbrack listvalues rbrack) $2) ((lbrack rbrack) (list)))
            (listvalues ((exp) (list $1)) ((exp camma listvalues) (append (list $1) $3)))
            (listmem ((lbrack exp rbrack) (list $2)) ((lbrack exp rbrack listmem) (list $2 $4)))

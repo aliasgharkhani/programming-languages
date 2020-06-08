@@ -245,7 +245,7 @@
 
 (define run
   (lambda (string)
-    (value-of-program (my-parser string) init-env)))
+    (value-of (my-parser string) init-env 1)))
 
 (define value-of-program
   (lambda (pgm env)
@@ -257,16 +257,24 @@
 
 
 (define value-of
-  (lambda (unitcom env)
-    (cond
-      ((while-com? unitcom) ('()));todo
+  (lambda (program env [p-u 0])
+    (let ((unitcom (cond
+                     [(eq? p-u 1) (car program)]
+                     [else program]
+                    )))
+      (cond
+      [(or (number? unitcom) (boolean? unitcom) (string? unitcom) (null? unitcom)) unitcom] 
+      [(while-com? unitcom) ('())];todo
       ((if-com? unitcom) (let ((exp (value-of (if-com->exp unitcom) env)))
                            (if (exp)
                                (value-of (if-com->com1 unitcom) env)
                                (value-of (if-com->com2 unitcom) env))))
 							   
-      ((assign? unitcom) (extend-env (assign->var unitcom) (value-of (assign->exp unitcom) env)))
-      ((return? unitcom) (value-of (return->exp unitcom)))
+      ((assign? unitcom) (cond
+                           [(null? (cdr program)) '()]
+                           [else (value-of (cdr program) (extend-env (assign->var unitcom) (value-of (assign->exp unitcom) env) env) 1)]
+                           ))
+      ((return? unitcom) (value-of (return->exp unitcom) env))
       
       ((more? unitcom) (let ([aexp1 (exp->aexp1 unitcom)] [aexp2 (exp->aexp2 unitcom)])
                               (cond 
@@ -298,11 +306,10 @@
                               [else #f]
                               )))
 
+      ((nequal? unitcom) (not (value-of (append (list 'equal?) (cdr unitcom)))))
+
       
-      ;((nequal? unitcom) (let ([aexp1 (exp->aexp1 unitcom)] [aexp2 (exp->aexp2 unitcom)])
-       ;                       (not (value-of equal-string))))
-
-
+      
       ((symmetric? unitcom) (let ([cexp (cexp->cexp unitcom)] )
                               (cond
                               [(number? cexp) (* -1 cexp)]
@@ -370,18 +377,19 @@
                                
                                 [(and (list? cexp) (number? bexp)) (div-list-num cexp bexp)]
                                 [(and (number? cexp) (list? bexp)) (div-list-num bexp cexp)]) 
-      
-      
                               ))
-
+      [(var? unitcom) (apply-env (cexp->var unitcom) env)]
+      [else (unitcom)]
       
       
-      )
-
+      ))
     
 
     
-    ))
+
+    
+    )
+  )
 
 
 (define (evaluate path) (run (file->string path)))
