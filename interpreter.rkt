@@ -265,10 +265,13 @@
       (cond
       [(or (number? unitcom) (boolean? unitcom) (string? unitcom) (null? unitcom)) unitcom] 
       [(while-com? unitcom) ('())];todo
-      ((if-com? unitcom) (let ((exp (value-of (if-com->exp unitcom) env)))
-                           (if (exp)
-                               (value-of (if-com->com1 unitcom) env)
-                               (value-of (if-com->com2 unitcom) env))))
+      ((if-com? unitcom) (cond
+                           [(null? (cdr program)) '()]
+                           [else (let ((exp (value-of (if-com->exp unitcom) env)))
+                                   (if (exp)
+                                       (value-of (if-com->com1 unitcom) env)
+                                       (value-of (if-com->com2 unitcom) env)))]
+       ))
 							   
       ((assign? unitcom) (cond
                            [(null? (cdr program)) '()]

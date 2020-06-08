@@ -56,7 +56,7 @@
            (command ((unitcom) (list $1)) ((command semicolon unitcom) (append $1  (list $3))))
            (unitcom ((whilecom) $1) ((ifcom) $1) ((assign) $1) ((return) $1))
            (whilecom ((while exp do command end) (list 'while (list $2) $4)))
-           (ifcom ((if exp then command else command endif) (list 'if (list $2) $4 $6)))
+           (ifcom ((if exp then command else command endif) (list 'if $2 $4 $6)))
            (assign ((var eq-assign exp) (list 'assign $1 $3)))
            (return ((returnt exp) (list 'return $2)))
            (exp ((aexp) $1) ((aexp more aexp) (list 'more? $1 $3)) ((aexp less aexp) (list 'less? $1 $3)) ((aexp eq aexp) (list 'equal? $1 $3)) ((aexp neq aexp) (list 'nequal? $1 $3)))
