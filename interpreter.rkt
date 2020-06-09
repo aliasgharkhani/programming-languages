@@ -122,9 +122,19 @@
 
 ;helper functions
 
+(define (before-and-after var env) (cond
+                                     [(null? env) '()]
+                                     [(eq? (caar env) var) (cdr env)]
+                                         
+                                     [else (append (list (car env)) (before-and-after var (cdr env)))]
+                                         
+                                     ))
 (define init-env '())
-(define (extend-env var value env) (append env (list (list var value))))
-(define (apply-env var env) (cond ((assq var env) => cadr) (else #f)))
+(define (extend-env var value env) (cond
+                                     [(eq? (apply-env var env) "not in env") (append env (list (list var value)))]
+                                     [else (append (before-and-after var env) (list (list var value)))]
+                                     ))
+(define (apply-env var env) (cond ((assq var env) => cadr) (else "not in env")))
 
 (define (list-greater-than-number ls number)(cond
                                             [(null? ls) #t]
