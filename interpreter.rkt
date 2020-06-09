@@ -65,8 +65,8 @@
 (define while-com->exp
   (lambda (unit-com) (caadr unit-com)))
 
-(define while-com->command
-  (lambda (unit-com) (caaddr unit-com)))
+(define while-com->com
+  (lambda (unit-com) (caddr unit-com)))
 
 (define if-com->exp
   (lambda (unit-com) (cadr unit-com)))
@@ -264,7 +264,7 @@
                        [else (value-of (cdr program) (car (value-of (car program) env)) 1)])]
         [else (cond
                 [(or (number? program) (boolean? program) (string? program) (null? program)) (list env program)] 
-                [(while-com? program) (when (cadr (value-of (while-com->exp program) env)) '() '())];todo
+                [(while-com? program) (when (cadr (value-of (while-com->exp program) env)) (value-of program (car (value-of (while-com->com program) env 1)) 1))]
                 [(if-com? program) (let ((exp (cadr (value-of (if-com->exp program) env))))
                                              (if exp
                                                  (value-of (if-com->com1 program) env 1)
