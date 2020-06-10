@@ -340,14 +340,17 @@
                                        )))
 
     
-                  ((equal? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
+                   ((equal? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
                                       (cond 
                                         [(and (number? aexp1) (number? aexp2)) (list env (= aexp1 aexp2))]
                                         [(and (string? aexp1) (string? aexp2)) (list env (string=? aexp1 aexp2))]
                                         [(and (null? aexp1) (null? aexp2)) (list env #t)]
                                         [(and (boolean? aexp1) (boolean? aexp2)) (list env (eq? aexp1 aexp2))]
-                                        [(and (list? aexp1) (list? aexp2)) (list env (list-equal-list aexp1 aexp2))]
-                                        [(and (list? aexp1) (or (number? aexp2) (string? aexp2) (boolean? aexp2) (null? aexp2))) (list env (list-equal-bool aexp1 aexp2))]
+                                        [(and (list? aexp1) (and (list? aexp2) (not (null? aexp2)))) (list env (list-equal-list aexp1 aexp2))]
+                                        [(and (list? aexp1) (number? aexp2))  (list env (list-equal-number aexp1 aexp2))]
+                                        [(and (list? aexp1) (string? aexp2))  (list env (list-equal-string aexp1 aexp2))]
+                                        [(and (list? aexp1) (boolean? aexp2)) (list env (list-equal-bool aexp1 aexp2))]
+                                        [(and (list? aexp1) (null? aexp2)) (list env (list-equal-null aexp1 aexp2))]
                                         [else (list env #f)]
                                         )))
 
