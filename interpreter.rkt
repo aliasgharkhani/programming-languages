@@ -251,6 +251,30 @@
                            [ else (cond [(list? (car x)) (append (reverse-list (cdr x)) (list (reverse-list (car x))))]
                                        [else  (append (reverse-list (cdr x)) (list (car x)))])]))
 
+
+(define (compare-error first second)(cond
+                                      [(and (number? first) (list? second)) "Error! Cannot compare number and list."]
+                                      [(and (boolean? first) (list? second)) "Error! Cannot compare boolean and list."]
+                                      [(and (string? first) (list? second)) "Error! Cannot compare string and list."]
+                                      [(and (null? first) (list? second)) "Error! Cannot compare null and list."]
+                                      [(and (list? first) (null? second)) "Error! Cannot compare list and null."]
+                                      [(and (list? first) (list? second)) "Error! Cannot compare list and list."]
+                                      [(and (number? first) (string? second)) "Error! Cannot compare number and string."]
+                                      [(and (string? first) (number? second)) "Error! Cannot compare string and number."]
+                                      [(and (string? first) (boolean? second)) "Error! Cannot compare string and boolean."]
+                                      [(and (boolean? first) (string? second)) "Error! Cannot compare boolean and string."]
+                                      [(and (number? first) (boolean? second)) "Error! Cannot compare number and boolean."]
+                                      [(and (boolean? first) (number? second)) "Error! Cannot compare boolean and number."]
+                                      [(or (null? first) (null? second)) "Error! Cannot compare null with other types."]
+                                      [else "Error! Comparison cannot be done."]
+                                     
+                                      
+                                      
+
+                                      )
+  )  
+
+
 ;interpreter
 
 (define run
@@ -264,6 +288,9 @@
                         [(null? (cdr pgm)) (value-of (car pgm) env)]
                         [(return? (car pgm)) (value-of (car pgm) env)])
     ))))
+
+
+
 
 ; order of return arguments in value-of procedure : (env return-value)
 (define value-of
@@ -297,6 +324,7 @@
                                        [(and (string? aexp1) (string? aexp2)) (list env (string>? aexp1 aexp2))]
                                        [(and (list? aexp1) (string? aexp2)) (list env (list-greater-than-string aexp1 aexp2))]
                                        [(and (list? aexp1) (number? aexp2)) (list env (list-greater-than-number aexp1 aexp2))]
+                                       [else (list (extend-env 'return-value "cannot compare" env) (compare-error aexp1 aexp2))]
                                        )))
 
                   ((less? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
@@ -305,6 +333,7 @@
                                        [(and (string? aexp1) (string? aexp2)) (list env (string<? aexp1 aexp2))]
                                        [(and (list? aexp1) (string? aexp2)) (list env (list-less-than-string aexp1 aexp2))]
                                        [(and (list? aexp1) (number? aexp2)) (list env (list-less-than-number aexp1 aexp2))]
+                                       [else (list (extend-env 'return-value "cannot compare" env) (compare-error aexp1 aexp2))]
                                        )))
 
     
@@ -327,7 +356,9 @@
                                           (cond
                                             [(number? cexp) (list env (* -1 cexp))]                                          
                                             [(boolean? cexp) (list env (not cexp))]
-                                            [(list? cexp) (list env (reverse-list cexp))]) 
+                                            [(list? cexp) (list env (reverse-list cexp))]
+                                            
+                                            ) 
       
       
                                           ))
@@ -372,7 +403,10 @@
                   ((div? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))])
                                     (cond
                                 
-                                      [(and (number? cexp) (number? bexp)) (list env (/ cexp bexp))]                                                            
+                                      [(and (number? cexp) (number? bexp))(cond
+                                                                            [(= 0 bexp) (list (extend-env 'return-value "f" env) "Error! Cannot divide by zero")]
+                                                                            [else (list env (/ cexp bexp))]
+                                                                             )]                                                            
                                       [(and (list? cexp) (number? bexp)) (list env (div-list-num cexp bexp))]
                                       [(and (number? cexp) (list? bexp)) (list env (div-list-num bexp cexp))]) 
                                     ))
