@@ -60,6 +60,9 @@
 (define var-listmem?
   (lambda (cexp) (eqv? (car cexp) 'list-ref)))
 
+(define par?
+  (lambda (cexp) (eqv? (car cexp) 'par)))
+
 ;extractors
 
 (define while-com->exp
@@ -107,14 +110,14 @@
 (define cexp->cexp
   (lambda (cexp) (cadr cexp)))
 
-(define cexp->exp
-  (lambda (cexp) (car cexp)))
-
 (define cexp->var
   (lambda (cexp) (cadr cexp)))
 
 (define cexp->listmem
   (lambda (cexp) (caddr cexp)))
+
+(define cexp->exp
+  (lambda (cexp) (cadr cexp)))
 
 
 
@@ -412,6 +415,7 @@
                                     ))
                   [(var? program) (list env (apply-env (cexp->var program) env))]
                   [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
+                  [(par? program) (value-of (cexp->exp program) env)]
                   [else (list env program)]      
                   )])]
 
