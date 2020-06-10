@@ -19,9 +19,9 @@
             ("null" (token-null))
             ("true" (token-true))
             ("false" (token-false))
-            ("string" (token-string (lexeme)))
+            ;("string" (token-string (lexeme)))
             ((:or (:+ (char-range #\0 #\9)) (:: (:+ (char-range #\0 #\9)) #\. (:+ (char-range #\0 #\9)))) (token-posnumber (string->number lexeme)))
-            ((:+ (char-range #\a #\z)) (token-var (string->symbol lexeme)))
+            ((:+ (char-range #\a #\z)) (token-string lexeme))
             ("+" (token-pos))
             ("==" (token-eq))
             ("=" (token-eq-assign))
@@ -37,13 +37,13 @@
             ("]" (token-rbrack))
             (";" (token-semicolon))
             ("," (token-camma))
-            
+            ("\"" (token-qotation))
             
             (whitespace (simple-math-lexer input-port))
             ((eof) (token-EOF))))
 
-(define-tokens a (var string posnumber))
-(define-empty-tokens b (EOF pos neg eq-assign eq mult div less more neq lpar rpar lbrack rbrack if semicolon camma while do end then else endif returnt null true false))
+(define-tokens a (string posnumber))
+(define-empty-tokens b (EOF pos neg eq-assign eq mult div less more neq lpar rpar lbrack rbrack if semicolon camma while do end then else endif returnt null true false qotation))
 
 
 (define simple-math-parser
@@ -57,12 +57,12 @@
            (unitcom ((whilecom) $1) ((ifcom) $1) ((assign) $1) ((return) $1))
            (whilecom ((while exp do command end) (list 'while (list $2) $4)))
            (ifcom ((if exp then command else command endif) (list 'if $2 $4 $6)))
-           (assign ((var eq-assign exp) (list 'assign $1 $3)))
+           (assign ((string eq-assign exp) (list 'assign (string->symbol $1) $3)))
            (return ((returnt exp) (list 'return $2)))
            (exp ((aexp) $1) ((aexp more aexp) (list 'more? $1 $3)) ((aexp less aexp) (list 'less? $1 $3)) ((aexp eq aexp) (list 'equal? $1 $3)) ((aexp neq aexp) (list 'nequal? $1 $3)))
            (aexp ((bexp) $1) ((bexp neg aexp) (list 'sub $1 $3)) ((bexp pos aexp) (list 'add $1 $3)))
            (bexp ((cexp) $1) ((cexp mult bexp) (list 'mult $1 $3)) ((cexp div bexp) (list 'div $1 $3)))
-           (cexp ((neg cexp) (list '- $2)) ((lpar exp rpar) (list $2)) ((posnumber) $1) ((null) null) ((var) (list 'var $1)) ((true) '#t) ((false) '#f) ((string) $1) ((list) $1) ((var listmem) (list 'list-ref $1 $2)))
+           (cexp ((neg cexp) (list '- $2)) ((lpar exp rpar) (list $2)) ((posnumber) $1) ((null) null) ((string) (list 'var (string->symbol $1))) ((true) '#t) ((false) '#f) ((qotation string qotation) $2) ((list) $1) ((string listmem) (list 'list-ref (string->symbol $1) $2)))
            (list ((lbrack listvalues rbrack) $2) ((lbrack rbrack) (list)))
            (listvalues ((exp) (list $1)) ((exp camma listvalues) (append (list $1) $3)))
            (listmem ((lbrack exp rbrack) (list $2)) ((lbrack exp rbrack listmem) (list $2 $4)))
