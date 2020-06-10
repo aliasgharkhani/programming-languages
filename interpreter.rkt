@@ -269,115 +269,119 @@
 (define value-of
   (lambda (program env [p-u 0])
       (cond
-        [(eq? p-u 1) (cond
-                       [(null? (cdr program)) (value-of (car program) env)]
-                       [(return? (car program)) (value-of (car program) env)]
-                       [else (value-of (cdr program) (car (value-of (car program) env)) 1)])]
+        [(not (eq? "not in env" (apply-env 'return-value env))) (list env (apply-env 'return-value env))]
         [else (cond
-                [(or (number? program) (boolean? program) (string? program) (null? program)) (list env program)] 
-                [(while-com? program) (cond
-                                        [(cadr (value-of (while-com->exp program) env)) (value-of program (car (value-of (while-com->com program) env 1)))]
-                                        ;[(cadr (value-of (while-com->exp program) env)) (display (while-com->com program))]
-                                        [else (list env '())]
-                                        )]
+          [(eq? p-u 1) (cond
+                         [(null? (cdr program)) (value-of (car program) env)]
+                         [(return? (car program)) (value-of (car program) env)]
+                         [else (value-of (cdr program) (car (value-of (car program) env)) 1)])]
+          [else (cond
+                  [(or (number? program) (boolean? program) (string? program) (null? program)) (list env program)] 
+                  [(while-com? program) (cond
+                                          [(cadr (value-of (while-com->exp program) env)) (value-of program (car (value-of (while-com->com program) env 1)))]
+                                          ;[(cadr (value-of (while-com->exp program) env)) (display (while-com->com program))]
+                                          [else (list env '())]
+                                          )]
                 
-                [(if-com? program) (let ((exp (cadr (value-of (if-com->exp program) env))))
-                                             (if exp
-                                                 (value-of (if-com->com1 program) env 1)
-                                                 (value-of (if-com->com2 program) env 1)))]
+                  [(if-com? program) (let ((exp (cadr (value-of (if-com->exp program) env))))
+                                       (if exp
+                                           (value-of (if-com->com1 program) env 1)
+                                           (value-of (if-com->com2 program) env 1)))]
 							   
-                ((assign? program) (list (extend-env (assign->var program) (cadr (value-of (assign->exp program) env)) env) null))
-                ((return? program) (value-of (return->exp program) env))
+                  ((assign? program) (list (extend-env (assign->var program) (cadr (value-of (assign->exp program) env)) env) null))
+                  ((return? program) (begin (define aux (value-of (return->exp program) env)) (list (extend-env 'return-value (cadr aux) env) (cadr aux))))
       
-                ((more? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
-                                   (cond 
-                                     [(and (number? aexp1) (number? aexp2)) (list env (> aexp1 aexp2))]                                     
-                                     [(and (string? aexp1) (string? aexp2)) (list env (string>? aexp1 aexp2))]
-                                     [(and (list? aexp1) (string? aexp2)) (list env (list-greater-than-string aexp1 aexp2))]
-                                     [(and (list? aexp1) (number? aexp2)) (list env (list-greater-than-number aexp1 aexp2))]
-                                     )))
+                  ((more? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
+                                     (cond 
+                                       [(and (number? aexp1) (number? aexp2)) (list env (> aexp1 aexp2))]                                     
+                                       [(and (string? aexp1) (string? aexp2)) (list env (string>? aexp1 aexp2))]
+                                       [(and (list? aexp1) (string? aexp2)) (list env (list-greater-than-string aexp1 aexp2))]
+                                       [(and (list? aexp1) (number? aexp2)) (list env (list-greater-than-number aexp1 aexp2))]
+                                       )))
 
-                ((less? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
-                                   (cond 
-                                     [(and (number? aexp1) (number? aexp2)) (list env (< aexp1 aexp2))]
-                                     [(and (string? aexp1) (string? aexp2)) (list env (string<? aexp1 aexp2))]
-                                     [(and (list? aexp1) (string? aexp2)) (list env (list-less-than-string aexp1 aexp2))]
-                                     [(and (list? aexp1) (number? aexp2)) (list env (list-less-than-number aexp1 aexp2))]
-                                     )))
+                  ((less? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
+                                     (cond 
+                                       [(and (number? aexp1) (number? aexp2)) (list env (< aexp1 aexp2))]
+                                       [(and (string? aexp1) (string? aexp2)) (list env (string<? aexp1 aexp2))]
+                                       [(and (list? aexp1) (string? aexp2)) (list env (list-less-than-string aexp1 aexp2))]
+                                       [(and (list? aexp1) (number? aexp2)) (list env (list-less-than-number aexp1 aexp2))]
+                                       )))
 
     
-                ((equal? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
-                                    (cond 
-                                      [(and (number? aexp1) (number? aexp2)) (list env (= aexp1 aexp2))]
-                                      [(and (string? aexp1) (string? aexp2)) (list env (string=? aexp1 aexp2))]
-                                      [(and (null? aexp1) (null? aexp2)) (list env #t)]
-                                      [(and (boolean? aexp1) (boolean? aexp2)) (list env (eq? aexp1 aexp2))]
-                                      [(and (list? aexp1) (list? aexp2)) (list env (list-equal-list aexp1 aexp2))]
-                                      [(and (list? aexp1) (or (number? aexp2) (string? aexp2) (boolean? aexp2) (null? aexp2))) (list env (list-equal-bool aexp1 aexp2))]
-                                      [else (list env #f)]
-                                      )))
+                  ((equal? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
+                                      (cond 
+                                        [(and (number? aexp1) (number? aexp2)) (list env (= aexp1 aexp2))]
+                                        [(and (string? aexp1) (string? aexp2)) (list env (string=? aexp1 aexp2))]
+                                        [(and (null? aexp1) (null? aexp2)) (list env #t)]
+                                        [(and (boolean? aexp1) (boolean? aexp2)) (list env (eq? aexp1 aexp2))]
+                                        [(and (list? aexp1) (list? aexp2)) (list env (list-equal-list aexp1 aexp2))]
+                                        [(and (list? aexp1) (or (number? aexp2) (string? aexp2) (boolean? aexp2) (null? aexp2))) (list env (list-equal-bool aexp1 aexp2))]
+                                        [else (list env #f)]
+                                        )))
 
-                ((nequal? program) (list env (not (cadr (value-of (append (list 'equal?) (cdr program)) env)))))
+                  ((nequal? program) (list env (not (cadr (value-of (append (list 'equal?) (cdr program)) env)))))
 
       
       
-                ((symmetric? program) (let ([cexp (cadr (value-of (cexp->cexp program) env))] )
-                                        (cond
-                                          [(number? cexp) (list env (* -1 cexp))]                                          
-                                          [(boolean? cexp) (list env (not cexp))]
-                                          [(list? cexp) (list env (reverse-list cexp))]) 
+                  ((symmetric? program) (let ([cexp (cadr (value-of (cexp->cexp program) env))] )
+                                          (cond
+                                            [(number? cexp) (list env (* -1 cexp))]                                          
+                                            [(boolean? cexp) (list env (not cexp))]
+                                            [(list? cexp) (list env (reverse-list cexp))]) 
       
       
-                                        ))
+                                          ))
 
-                ((add? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))])
-                                  (cond
-                                    [(and (number? cexp) (number? bexp)) (list env (+ cexp bexp))]
-                                    [(and (boolean? cexp) (boolean? bexp)) (list env (or cexp bexp))]
-                                    [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]
-                                    [(and (number? cexp) (list? bexp)) (list env (add-list-num bexp cexp))]
-                                    [(and (list? cexp) (number? bexp)) (list env (add-list-num cexp bexp))]
-                                    [(and (boolean? cexp) (list? bexp)) (list env (bool-plus-list bexp cexp))]
-                                    [(and (list? cexp) (boolean? bexp)) (list env (bool-plus-list cexp bexp))]
-                                    [(and (string? cexp) (list? bexp)) (list env (string-plus-list bexp cexp))]
-                                    [(and (list? cexp) (string? bexp)) (list env (string-plus-list cexp bexp))]
-                                    [(and (list? cexp) (list? bexp)) (list env (append cexp bexp))]
-                                    )
+                  ((add? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))])
+                                    (cond
+                                      [(and (number? cexp) (number? bexp)) (list env (+ cexp bexp))]
+                                      [(and (boolean? cexp) (boolean? bexp)) (list env (or cexp bexp))]
+                                      [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]
+                                      [(and (number? cexp) (list? bexp)) (list env (add-list-num bexp cexp))]
+                                      [(and (list? cexp) (number? bexp)) (list env (add-list-num cexp bexp))]
+                                      [(and (boolean? cexp) (list? bexp)) (list env (bool-plus-list bexp cexp))]
+                                      [(and (list? cexp) (boolean? bexp)) (list env (bool-plus-list cexp bexp))]
+                                      [(and (string? cexp) (list? bexp)) (list env (string-plus-list bexp cexp))]
+                                      [(and (list? cexp) (string? bexp)) (list env (string-plus-list cexp bexp))]
+                                      [(and (list? cexp) (list? bexp)) (list env (append cexp bexp))]
+                                      )
                                 
       
       
-                                  ))
-                ((sub? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))])
-                                  (cond
+                                    ))
+                  ((sub? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))])
+                                    (cond
                                 
-                                    [(and (number? cexp) (number? bexp)) (list env (- cexp bexp))]                             
-                                    [(and (list? cexp) (number? bexp)) (list env (sub-list-num cexp bexp))]
-                                    [(and (number? cexp) (list? bexp)) (list env (sub-list-num bexp cexp))]
-                                    )
-                                ))
+                                      [(and (number? cexp) (number? bexp)) (list env (- cexp bexp))]                             
+                                      [(and (list? cexp) (number? bexp)) (list env (sub-list-num cexp bexp))]
+                                      [(and (number? cexp) (list? bexp)) (list env (sub-list-num bexp cexp))]
+                                      )
+                                    ))
 
-                ((mult? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))] )
-                                   (cond
-                                     [(and (number? cexp) (number? bexp)) (list env (* cexp bexp))]                                
-                                     [(and (boolean? cexp) (boolean? bexp)) (list env (and cexp bexp))]
-                                     [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]                                
-                                     [(and (number? cexp) (list? bexp)) (list env (mul-list-num bexp cexp))]
-                                     [(and (list? cexp) (number? bexp)) (list env (mul-list-num cexp bexp))]
-                                     [(and (boolean? cexp) (list? bexp)) (list env (bool-mul-list bexp cexp))]
-                                     [(and (list? cexp) (boolean? bexp)) (list env (bool-mul-list cexp bexp))]                             
-                                     )                                
-                                   ))
-                ((div? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))])
-                                  (cond
+                  ((mult? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))] )
+                                     (cond
+                                       [(and (number? cexp) (number? bexp)) (list env (* cexp bexp))]                                
+                                       [(and (boolean? cexp) (boolean? bexp)) (list env (and cexp bexp))]
+                                       [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]                                
+                                       [(and (number? cexp) (list? bexp)) (list env (mul-list-num bexp cexp))]
+                                       [(and (list? cexp) (number? bexp)) (list env (mul-list-num cexp bexp))]
+                                       [(and (boolean? cexp) (list? bexp)) (list env (bool-mul-list bexp cexp))]
+                                       [(and (list? cexp) (boolean? bexp)) (list env (bool-mul-list cexp bexp))]                             
+                                       )                                
+                                     ))
+                  ((div? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))])
+                                    (cond
                                 
-                                    [(and (number? cexp) (number? bexp)) (list env (/ cexp bexp))]                                                            
-                                    [(and (list? cexp) (number? bexp)) (list env (div-list-num cexp bexp))]
-                                    [(and (number? cexp) (list? bexp)) (list env (div-list-num bexp cexp))]) 
-                                  ))
-                [(var? program) (list env (apply-env (cexp->var program) env))]
-                [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
-                [else (list env program)]      
-                )])
+                                      [(and (number? cexp) (number? bexp)) (list env (/ cexp bexp))]                                                            
+                                      [(and (list? cexp) (number? bexp)) (list env (div-list-num cexp bexp))]
+                                      [(and (number? cexp) (list? bexp)) (list env (div-list-num bexp cexp))]) 
+                                    ))
+                  [(var? program) (list env (apply-env (cexp->var program) env))]
+                  [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
+                  [else (list env program)]      
+                  )])]
+
+        )
     
     )
   )
