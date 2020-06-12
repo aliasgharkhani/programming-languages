@@ -30,10 +30,10 @@
 (define less?
   (lambda (exp) (eqv? (car exp) 'less?)))
 
-(define equal?
+(define my-equal?
   (lambda (exp) (eqv? (car exp) 'equal?)))
 
-(define nequal?
+(define my-nequal?
   (lambda (exp) (eqv? (car exp) 'nequal?)))
 
 (define sub?
@@ -166,7 +166,7 @@
 (define (list-equal-list ls1 ls2) (cond [(and (null? ls1 )(null? ls2)) #t]
                                     [(null? ls1) #f]
                                     [(null? ls2) #f]
-                                    [(not (eq? (car ls1) (car ls2))) #f]
+                                    [(not (equal? (car ls1) (car ls2))) #f]
                                     [else (list-equal-list (cdr ls1) (cdr ls2))]
                                ))
 
@@ -340,13 +340,14 @@
                                        )))
 
     
-                   ((equal? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
+                   ((my-equal? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
                                       (cond 
                                         [(and (number? aexp1) (number? aexp2)) (list env (= aexp1 aexp2))]
                                         [(and (string? aexp1) (string? aexp2)) (list env (string=? aexp1 aexp2))]
                                         [(and (null? aexp1) (null? aexp2)) (list env #t)]
                                         [(and (boolean? aexp1) (boolean? aexp2)) (list env (eq? aexp1 aexp2))]
-                                        [(and (list? aexp1) (and (list? aexp2) (not (null? aexp2)))) (list env (list-equal-list aexp1 aexp2))]
+                                        ;[(and (list? aexp1) (and (list? aexp2) (not (null? aexp2)))) (list env (list-equal-list aexp1 aexp2))]
+                                        [(and (list? aexp1) (and (list? aexp2) (not (null? aexp2)))) (list env (equal? aexp1 aexp2))]
                                         [(and (list? aexp1) (number? aexp2))  (list env (list-equal-number aexp1 aexp2))]
                                         [(and (list? aexp1) (string? aexp2))  (list env (list-equal-string aexp1 aexp2))]
                                         [(and (list? aexp1) (boolean? aexp2)) (list env (list-equal-bool aexp1 aexp2))]
@@ -354,7 +355,7 @@
                                         [else (list env #f)]
                                         )))
 
-                  ((nequal? program) (list env (not (cadr (value-of (append (list 'equal?) (cdr program)) env)))))
+                  ((my-nequal? program) (list env (not (cadr (value-of (append (list 'equal?) (cdr program)) env)))))
 
       
       
