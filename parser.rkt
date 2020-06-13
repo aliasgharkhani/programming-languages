@@ -40,6 +40,7 @@
             ("," (token-camma))
             ("\"" (token-qotation))
             
+            
             (whitespace (simple-math-lexer input-port))
             ((eof) (token-EOF))))
 
@@ -58,7 +59,7 @@
            (unitcom ((whilecom) $1) ((ifcom) $1) ((assign) $1) ((return) $1))
            (whilecom ((while exp do command end) (list 'while (list $2) $4)))
            (ifcom ((if exp then command else command endif) (list 'if $2 $4 $6)))
-           (assign ((string eq-assign exp) (list 'assign (string->symbol $1) $3)))
+           (assign ((string eq-assign exp) (list 'assign (string->symbol $1) $3)) ((string eq exp) (raise "use = for assigning not ==")))
            (return ((returnt exp) (list 'return $2)))
            (exp ((aexp) $1) ((aexp more aexp) (list 'more? $1 $3)) ((aexp less aexp) (list 'less? $1 $3)) ((aexp eq aexp) (list 'equal? $1 $3)) ((aexp neq aexp) (list 'nequal? $1 $3)))
            (aexp ((bexp) $1) ((bexp neg aexp) (list 'sub $1 $3)) ((bexp pos aexp) (list 'add $1 $3)))

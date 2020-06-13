@@ -280,7 +280,8 @@
 
 ;interpreter
 
-(define run
+
+(define run 
   (lambda (string)
     (cadr (value-of (my-parser string) init-env 1))))
 
@@ -411,7 +412,8 @@
                                     (cond
                                 
                                       [(and (number? cexp) (number? bexp))(cond
-                                                                            [(= 0 bexp) (list (extend-env 'return-value "f" env) "Error! Cannot divide by zero")]
+                                                                            ;[(= 0 bexp) (list (extend-env 'return-value "f" env) "Error! Cannot divide by zero")]
+                                                                            [(= 0 bexp) (raise "Error! Cannot divide by zero")]
                                                                             [else (list env (/ cexp bexp))]
                                                                              )]                                                            
                                       [(and (list? cexp) (number? bexp)) (list env (div-list-num cexp bexp))]
@@ -444,4 +446,6 @@
 (define (values indices env)
   (map (lambda (n) (cadr (value-of n env))) indices))
 
-(define (evaluate path) (run (file->string path)))
+
+
+(define (evaluate path) (with-handlers ([string? (λ (exn) (display exn))]) (run (file->string path))) )
