@@ -307,7 +307,8 @@
                          [(return? (car program)) (value-of (car program) env)]
                          [else (value-of (cdr program) (car (value-of (car program) env)) 1)])]
           [else (cond
-                  [(or (number? program) (boolean? program) (string? program) (null? program)) (list env program)] 
+                  [(or (number? program) (boolean? program) (string? program) (null? program)) (list env program)]
+                  [(my-null? program)  (list env 'null)]
                   [(while-com? program) (cond
                                           [(cadr (value-of (while-com->exp program) env)) (value-of program (car (value-of (while-com->com program) env 1)))]
                                           ;[(cadr (value-of (while-com->exp program) env)) (display (while-com->com program))]
@@ -422,7 +423,7 @@
                   [(var? program) (list env (apply-env (cexp->var program) env))]
                   [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                   [(par? program) (value-of (cexp->exp program) env)]
-                  [(my-null? program)  (env 'null)]
+                  
                   [else (list env program)]      
                   )])]
 
