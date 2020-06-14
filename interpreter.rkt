@@ -256,20 +256,20 @@
 
 
 (define (compare-error first second)(cond
-                                      [(and (number? first) (list? second)) "Error! Cannot compare number and list."]
-                                      [(and (boolean? first) (list? second)) "Error! Cannot compare boolean and list."]
-                                      [(and (string? first) (list? second)) "Error! Cannot compare string and list."]
-                                      [(and (null? first) (list? second)) "Error! Cannot compare null and list."]
-                                      [(and (list? first) (null? second)) "Error! Cannot compare list and null."]
-                                      [(and (list? first) (list? second)) "Error! Cannot compare list and list."]
-                                      [(and (number? first) (string? second)) "Error! Cannot compare number and string."]
-                                      [(and (string? first) (number? second)) "Error! Cannot compare string and number."]
-                                      [(and (string? first) (boolean? second)) "Error! Cannot compare string and boolean."]
-                                      [(and (boolean? first) (string? second)) "Error! Cannot compare boolean and string."]
-                                      [(and (number? first) (boolean? second)) "Error! Cannot compare number and boolean."]
-                                      [(and (boolean? first) (number? second)) "Error! Cannot compare boolean and number."]
-                                      [(or (null? first) (null? second)) "Error! Cannot compare null with other types."]
-                                      [else "Error! Comparison cannot be done."]
+                                      [(and (number? first) (list? second)) (raise "Error! Cannot compare number and list.")]
+                                      [(and (boolean? first) (list? second)) (raise "Error! Cannot compare boolean and list.")]
+                                      [(and (string? first) (list? second)) (raise "Error! Cannot compare string and list.")]
+                                      [(and (null? first) (list? second)) (raise "Error! Cannot compare null and list.")]
+                                      [(and (list? first) (null? second)) (raise "Error! Cannot compare list and null.")]
+                                      [(and (list? first) (list? second)) (raise "Error! Cannot compare list and list.")]
+                                      [(and (number? first) (string? second)) (raise "Error! Cannot compare number and string.")]
+                                      [(and (string? first) (number? second)) (raise "Error! Cannot compare string and number.")]
+                                      [(and (string? first) (boolean? second)) (raise "Error! Cannot compare string and boolean.")]
+                                      [(and (boolean? first) (string? second)) (raise "Error! Cannot compare boolean and string.")]
+                                      [(and (number? first) (boolean? second)) (raise "Error! Cannot compare number and boolean.")]
+                                      [(and (boolean? first) (number? second)) (raise "Error! Cannot compare boolean and number.")]
+                                      [(or (null? first) (null? second)) (raise "Error! Cannot compare null with other types.")]
+                                      [else (raise "Error! Comparison cannot be done.")]
                                      
                                       
                                       
