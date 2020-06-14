@@ -422,6 +422,7 @@
                   [(var? program) (list env (apply-env (cexp->var program) env))]
                   [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                   [(par? program) (value-of (cexp->exp program) env)]
+                  [(my-null? program)  (env 'null)]
                   [else (list env program)]      
                   )])]
 
@@ -435,8 +436,13 @@
 (define (make-indices indices) (cond [(null?  (cdr indices)) indices]
                                      [else (cons (car indices) (make-indices (cadr indices)))]
                                      ))
-(define (list-index-1d lst index) (cond [(= 0 index) (car lst) ]
-                                     [else (list-index-1d (cdr lst) (- index 1))]
+(define (list-index-1d lst index) (cond
+                                    [(not (number? index)) (raise "Error! Array index must be positive number, not other types.")]
+                                    [(null? lst) (raise "Error! Array index out of bound.")]
+                                    [(< index 0) (raise "Error! Array index must be positive number, not negative number.")]
+                                   
+                                    [(= 0 index) (car lst) ]
+                                    [else (list-index-1d (cdr lst) (- index 1))]
                                      ))
 
 (define (list-index lst index) (cond [(null? (cdr index)) (list-index-1d lst (car index)) ]
