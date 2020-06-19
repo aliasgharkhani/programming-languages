@@ -377,9 +377,9 @@
                                       [(and (number? cexp) (number? bexp)) (list env (+ cexp bexp))]
                                       [(and (boolean? cexp) (boolean? bexp)) (list env (or cexp bexp))]
                                       [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]
-                                      [(and (number? cexp) (list? bexp)) (list env (add-list-num bexp cexp))]
+                                      [(and (number? cexp) (list? bexp)) (list env (add-list-num cexp bexp))]
                                       [(and (list? cexp) (number? bexp)) (list env (add-list-num cexp bexp))]
-                                      [(and (boolean? cexp) (list? bexp)) (list env (bool-plus-list bexp cexp))]
+                                      [(and (boolean? cexp) (list? bexp)) (list env (bool-plus-list cexp bexp))]
                                       [(and (list? cexp) (boolean? bexp)) (list env (bool-plus-list cexp bexp))]
                                       [(and (string? cexp) (list? bexp)) (list env (string-plus-list bexp cexp))]
                                       [(and (list? cexp) (string? bexp)) (list env (string-plus-list cexp bexp))]
@@ -394,7 +394,7 @@
                                 
                                       [(and (number? cexp) (number? bexp)) (list env (- cexp bexp))]                             
                                       [(and (list? cexp) (number? bexp)) (list env (sub-list-num cexp bexp))]
-                                      [(and (number? cexp) (list? bexp)) (list env (sub-list-num bexp cexp))]
+                                      [(and (number? cexp) (list? bexp)) (list env (sub-list-num cexp bexp))]
                                       )
                                     ))
 
@@ -403,9 +403,9 @@
                                        [(and (number? cexp) (number? bexp)) (list env (* cexp bexp))]                                
                                        [(and (boolean? cexp) (boolean? bexp)) (list env (and cexp bexp))]
                                        [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]                                
-                                       [(and (number? cexp) (list? bexp)) (list env (mul-list-num bexp cexp))]
+                                       [(and (number? cexp) (list? bexp)) (list env (mul-list-num cexp bexp))]
                                        [(and (list? cexp) (number? bexp)) (list env (mul-list-num cexp bexp))]
-                                       [(and (boolean? cexp) (list? bexp)) (list env (bool-mul-list bexp cexp))]
+                                       [(and (boolean? cexp) (list? bexp)) (list env (bool-mul-list cexp bexp))]
                                        [(and (list? cexp) (boolean? bexp)) (list env (bool-mul-list cexp bexp))]                             
                                        )                                
                                      ))
@@ -418,7 +418,7 @@
                                                                             [else (list env (/ cexp bexp))]
                                                                              )]                                                            
                                       [(and (list? cexp) (number? bexp)) (list env (div-list-num cexp bexp))]
-                                      [(and (number? cexp) (list? bexp)) (list env (div-list-num bexp cexp))]) 
+                                      [(and (number? cexp) (list? bexp)) (list env (div-list-num cexp bexp))]) 
                                     ))
                   [(var? program) (list env (apply-env (cexp->var program) env))]
                   [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
