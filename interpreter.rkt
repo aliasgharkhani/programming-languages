@@ -147,7 +147,13 @@
                                      [(eq? (apply-env var env) "not in env") (append env (list (list var value)))]
                                      [else (append (before-and-after var env) (list (list var value)))]
                                      ))
-(define (apply-env var env) (cond ((assq var env) => cadr) (else "not in env")))
+
+
+(define (apply-env var env) (cond
+                               [(null? env)  "not in env"]
+                               [(eq? (caar env) var) (cadr (value-of (caadar env) (cddar env) ))]
+                               [(apply-env var (cdr env))]
+                               ))
 
 (define (list-greater-than-number ls number)(cond
                                             [(null? ls) #t]
@@ -427,10 +433,13 @@
                                     [(and (list? cexp) (number? bexp)) (list env (div-list-num cexp bexp))]
                                     [(and (number? cexp) (list? bexp)) (list env (div-list-num bexp cexp))]) 
                                   ))
-                [(var? program)(let ([val (apply-env (cexp->var program) env)]) (list env  (cadr (value-of (car val) (cdr val)))))]
-                [(var-listmem? program) (let ([val (apply-env (cexp->var program) env)])
-                                          (list env (list-index  (cadr (value-of (car val) (cdr val))) (values (make-indices (cexp->listmem program)) env) )))]
+                
+                [(var? program) (list env  (apply-env (cexp->var program) env))]
+
+                [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                 [(par? program) (value-of (cexp->exp program) env)]
+
+                [(func-call? program) #t] 
                 
                 [else (list env program)]      
                 )])
