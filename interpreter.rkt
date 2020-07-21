@@ -329,7 +329,7 @@
                                          (value-of (if-com->com2 program) env 1)))]
                 
                 ((assign? program) (list (extend-env (assign->var program)  (list (assign->exp program) env) env)  null))
-                ((return? program) (begin (define aux (value-of (return->exp program) env)) (list (extend-env 'return-value (cadr aux) env) (cadr aux) )))
+                ((return? program) (list env (value-of (return->exp program) env)))
                 
                 ((more? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
                                    (cond 
@@ -407,6 +407,8 @@
                 
                 ((mult? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))] )
                                    (cond
+                                     [(eq? cexp 0) 0]
+                                     [(eq? cexp #f) #f]
                                      [(and (number? cexp) (number? bexp)) (list env (* cexp bexp))]                                
                                      [(and (boolean? cexp) (boolean? bexp)) (list env (and cexp bexp))]
                                      [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]                                
