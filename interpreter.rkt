@@ -63,6 +63,11 @@
 (define par?
   (lambda (cexp) (eqv? (car cexp) 'par)))
 
+(define func?
+  (lambda (unit-com) (eqv? (car unit-com) 'func)))
+
+(define func-call?
+  (lambda (unit-com) (eqv? (car unit-com) 'call)))
 ;extractors
 
 (define while-com->exp
@@ -119,9 +124,14 @@
 (define cexp->exp
   (lambda (cexp) (cadr cexp)))
 
+(define func->vars
+  (lambda (unit-com) (cadr unit-com)))
 
+(define func->com
+  (lambda (unit-com) (caddr unit-com)))
 
-
+(define func-call->args
+  (lambda (unit-com) (caddr unit-com)))
 
 ;helper functions
 

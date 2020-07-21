@@ -71,7 +71,7 @@
            (listvalues ((exp) (list $1)) ((exp camma listvalues) (append (list $1) $3)))
            (listmem ((lbrack exp rbrack) (list $2)) ((lbrack exp rbrack listmem) (list $2 $4)))
            (function ((func lpar vars rpar lcbrack command rcbrack) (list 'func $3 $6)))
-           (vars ((string) (list (string->symbol $1))) ((string camma vars) (list (string->symbol $1) $3)))
+           (vars ((string) (list (string->symbol $1))) ((string camma vars) (append (list (string->symbol $1)) $3)))
            (call ((string lpar args rpar) (list 'call (string->symbol $1) $3)))
            (args ((exp) (list $1)) ((exp camma args) (list (string->symbol $1) $3)))
              )))
