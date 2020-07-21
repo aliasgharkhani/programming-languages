@@ -19,6 +19,7 @@
             ("null" (token-null))
             ("true" (token-true))
             ("false" (token-false))
+            ("func" (token-func))
             ;("string" (token-string (lexeme)))
             ((:or (:+ (char-range #\0 #\9)) (:: (:+ (char-range #\0 #\9)) #\. (:+ (char-range #\0 #\9)))) (token-posnumber (string->number lexeme)))
             ((:+ (char-range #\A #\Z) (char-range #\a #\z)) (token-string lexeme))
@@ -39,13 +40,14 @@
             (";" (token-semicolon))
             ("," (token-camma))
             ("\"" (token-qotation))
-            
+            ("{" (token-lcbrack))
+            ("}" (token-rcbrack))
             
             (whitespace (simple-math-lexer input-port))
             ((eof) (token-EOF))))
 
 (define-tokens a (string posnumber))
-(define-empty-tokens b (EOF pos neg eq-assign eq mult div less more neq lpar rpar lbrack rbrack if semicolon camma while do end then else endif returnt null true false qotation))
+(define-empty-tokens b (EOF pos neg eq-assign eq mult div less more neq lpar rpar lbrack rbrack if semicolon camma while do end then else endif returnt null true false qotation func lcbrack rcbrack))
 
 
 (define simple-math-parser
@@ -59,7 +61,7 @@
            (unitcom ((whilecom) $1) ((ifcom) $1) ((assign) $1) ((return) $1))
            (whilecom ((while exp do command end) (list 'while (list $2) $4)) ((while do command end) (raise "missing conditoin of when")) ((while exp do end) (raise "missing command of when")))
            (ifcom ((if exp then command else command endif) (list 'if $2 $4 $6)) ((if then command else command endif) (raise "missing conditoin of if")) ((if exp then else command endif) (raise "missing first command of if")) ((if exp then command else endif) (raise "missing second command of if")))
-           (assign ((string eq-assign exp) (list 'assign (string->symbol $1) $3)) ((string eq exp) (raise "use = for assigning not ==")))
+           (assign ((string eq-assign exp) (list 'assign (string->symbol $1) $3)) ((string eq-assign function) (list 'assign (string->symbol $1) $3)) ((string eq-assign call) (list 'assign (string->symbol $1) $3)) ((string eq exp) (raise "use = for assigning not ==")))
            (return ((returnt exp) (list 'return $2)))
            (exp ((aexp) $1) ((aexp more aexp) (list 'more? $1 $3)) ((aexp less aexp) (list 'less? $1 $3)) ((aexp eq aexp) (list 'equal? $1 $3)) ((aexp neq aexp) (list 'nequal? $1 $3)))
            (aexp ((bexp) $1) ((bexp neg aexp) (list 'sub $1 $3)) ((bexp pos aexp) (list 'add $1 $3)))
@@ -68,6 +70,10 @@
            (list ((lbrack listvalues rbrack) $2) ((lbrack rbrack) (list)))
            (listvalues ((exp) (list $1)) ((exp camma listvalues) (append (list $1) $3)))
            (listmem ((lbrack exp rbrack) (list $2)) ((lbrack exp rbrack listmem) (list $2 $4)))
+           (function ((func lpar vars rpar lcbrack command rcbrack) (list 'func $3 $6)))
+           (vars ((string) (list (string->symbol $1))) ((string camma vars) (list (string->symbol $1) $3)))
+           (call ((string lpar args rpar) (list 'call (string->symbol $1) $3)))
+           (args ((exp) (list $1)) ((exp camma args) (list (string->symbol $1) $3)))
              )))
 
 ;
