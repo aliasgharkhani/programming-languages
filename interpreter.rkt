@@ -154,7 +154,7 @@
 
 (define (apply-env var env) (cond
                                [(null? env)  "not in env"]
-                               [(eq? (caar env) var) (cadr (value-of (caadar env) (cddar env) ))]
+                               [(eq? (caar env) var) (cadr (value-of (caadar env) (car (cdadar env)) ))]
                                [(apply-env var (cdr env))]
                                ))
 
@@ -308,7 +308,7 @@
 
 (define run 
   (lambda (string)
-    (cadr (value-of (my-parser string) init-env 1))))
+    (cadadr (value-of (my-parser string) init-env 1))))
 
 (define value-of-program
   (lambda (pgm env)
@@ -445,13 +445,13 @@
                                   ))
                 
                 [(var? program) (list env  (apply-env (cexp->var program) env))]
-
+                ;[(var? program) (begin (display env)(display "ata\n\n") (list env  (apply-env (cexp->var program) env)))]
                 [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                 [(par? program) (value-of (cexp->exp program) env)]
 
-                [(func-call? program) (let ([func (apply-env (func-call->name program) env)]) (list env (value-of (func->com func) (bound (func-call->args program) (func->vars func) env))))] 
+                [(func-call? program) (begin (display env) (display "\n\n") (display program) (display "\n\n") (let ([func (apply-env (func-call->name program) env)]) (list env (value-of (func->com func) (bound (func-call->args program) (func->vars func) env)))))]
                 
-                [else (list env program)]      
+                [else (list env program)] 
                 )])
 
     )
