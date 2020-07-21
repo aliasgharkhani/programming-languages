@@ -133,6 +133,9 @@
 (define func-call->args
   (lambda (unit-com) (caddr unit-com)))
 
+(define func-call->name
+  (lambda (unit-com) (cadr unit-com)))
+
 ;helper functions
 
 (define (before-and-after var env) (cond
