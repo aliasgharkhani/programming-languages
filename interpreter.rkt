@@ -292,7 +292,12 @@
                                       
 
                                       )
-  )  
+  ) 
+
+
+(define (bound args vars env) (cond
+                                [(null? args) env]
+                                [else (bound (cdr args) (cdr vars) (cons (list (car vars) (car args)) env))]))   
 
 
 ;interpreter
@@ -441,7 +446,7 @@
                 [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                 [(par? program) (value-of (cexp->exp program) env)]
 
-                [(func-call? program) #t] 
+                [(func-call? program) (let ([func (apply-env (func-call->name program) env)]) (value-of (func->com func) (bound (func-call->args program) (func->vars func) env)))] 
                 
                 [else (list env program)]      
                 )])
