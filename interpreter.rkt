@@ -449,7 +449,7 @@
                 [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                 [(par? program) (value-of (cexp->exp program) env)]
 
-                [(func-call? program) (let ([func (apply-env (func-call->name program) env)]) (value-of (func->com func) (bound (func-call->args program) (func->vars func) env)))] 
+                [(func-call? program) (let ([func (apply-env (func-call->name program) env)]) (list env (value-of (func->com func) (bound (func-call->args program) (func->vars func) env))))] 
                 
                 [else (list env program)]      
                 )])
