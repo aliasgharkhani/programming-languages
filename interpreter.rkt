@@ -127,14 +127,14 @@
   (lambda (cexp) (cadr cexp)))
 
 (define func->vars
-  (lambda (unit-com) (cadr unit-com)))
+  (lambda (unit-com) (cadar unit-com)))
 
 (define func->com
-  (lambda (unit-com) (caddr unit-com)))
+  (lambda (unit-com) (caddar unit-com)))
 
 
 (define func->env
-  (lambda (unit-com) (cdr unit-com)))
+  (lambda (unit-com) (cadr unit-com)))
 (define func-call->args
   
   (lambda (unit-com) (caddr unit-com)))
@@ -165,8 +165,8 @@
 (define (apply-env var env) (cond
                                [(null? env)  "not in env"]
                                ;[(eq? (caar env) var) (cond (func? (caar env) (begin (display (caar env) (display "dzzzzzzz\n\n")  (cdar env))) (else  (cadr (value-of (caadar env) (car (cdadar env)))))) ]
-                               [(eq? (caar env) var) (begin (cond ((func? env) (cadar env))
-                                                                                                               (else (cadr (value-of (caadar env) (car (cdadar env))))))) ]
+                               [(eq? (caar env) var) (cond   [(begin (display (cadar env)) (display "test\n\n") (func? (caadar env))) (cadar env)] 
+                                                            [else (cadr (value-of (caadar env) (car (cdadar env))))]) ]
                                [(apply-env var (cdr env))]
                                ))
 
@@ -312,7 +312,7 @@
 
 (define (bound args vars env) (cond
                                 [(null? args) env]
-                                [else (bound (cdr args) (cdr vars) (cons (list (car vars) (car args)) env))]))   
+                                [else (bound (cdr args) (cdr vars) (cons (list (car vars) (list (car args) env)) env))]))   
 
 
 ;interpreter
@@ -320,7 +320,7 @@
 
 (define run 
   (lambda (string)
-    (cadadr (value-of (my-parser string) init-env 1))))
+    (cadr (value-of (my-parser string) init-env 1))))
 
 (define value-of-program
   (lambda (pgm env)
@@ -336,7 +336,7 @@
 ; order of return arguments in value-of procedure : (env return-value)
 (define value-of
   
-  (lambda (program env [p-u 0])
+  (lambda (program env [p-u 0] [r-fr 0])
     (begin (display env) (display "\n") (display program) (display "hrer\n\n")
     (cond
         [(eq? p-u 1) (cond
@@ -357,7 +357,7 @@
                                          (value-of (if-com->com2 program) env 1)))]
                 
                 ((assign? program) (list (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env)  null))
-                ((return? program) (list env (value-of (return->exp program) env)))
+                ((return? program)  (value-of (return->exp program) env))
                 
                 ((more? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
                                    (cond 
@@ -458,15 +458,15 @@
                                     [(and (number? cexp) (list? bexp)) (list env (div-list-num bexp cexp))]) 
                                   ))
                 
-                [(var? program) (list env (begin (display (cexp->var program)) (apply-env (cexp->var program) env)))]
+                [(var? program) (list env (begin(apply-env (cexp->var program) env)))]
                 ;[(var? program) (begin (display env)(display "ata\n\n") (list env  (apply-env (cexp->var program) env)))]
                 [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                 [(par? program) (value-of (cexp->exp program) env)]
 
                 [(func-call? program) (begin 
                                              (let ([func (apply-env (func-call->name program) env)])
-                                               (display  (bound (func-call->args program) (func->vars func) func)) (display "funcc\n\n") (display "\n\n")
-                                               (list env (value-of (func->com func) (bound (func-call->args program) (func->vars func) (func->env func)) 1))))]
+                                               (display  func ) (display "funcc\n\n") (display "\n\n")
+                                               (list env (cadr (value-of (func->com func) (bound (func-call->args program) (func->vars func) env) 1)))))]
                 
                 [else (list env program)] 
                 )])
