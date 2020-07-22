@@ -154,7 +154,7 @@
 
 (define (apply-env var env) (cond
                                [(null? env)  "not in env"]
-                               [(eq? (caar env) var) (cadr (value-of (caadar env) (car (cdadar env)) ))]
+                               [(eq? (caar env) var) (cond (func? (caar env) (cdar env)) (else  (cadr (value-of (caadar env) (car (cdadar env)))))) ]
                                [(apply-env var (cdr env))]
                                ))
 
@@ -449,7 +449,10 @@
                 [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                 [(par? program) (value-of (cexp->exp program) env)]
 
-                [(func-call? program) (begin (display env) (display "\n\n") (display program) (display "\n\n") (let ([func (apply-env (func-call->name program) env)]) (list env (value-of (func->com func) (bound (func-call->args program) (func->vars func) env)))))]
+                [(func-call? program) (begin 
+                                             (let ([func (apply-env (func-call->name program) env)])
+                                               (display  func)(display "\n\n") (display "\n\n")
+                                               (list env (value-of (func->com func) (bound (func-call->args program) (func->vars func) (func->env func) ) 1))))]
                 
                 [else (list env program)] 
                 )])
