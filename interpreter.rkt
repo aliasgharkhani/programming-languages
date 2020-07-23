@@ -1,6 +1,7 @@
 #lang racket
 (require racket/include)
 (require "parser.rkt")
+(require "lib.rkt")
 ;predicators
 (define program?
   (lambda (command)
