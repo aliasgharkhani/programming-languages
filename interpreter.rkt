@@ -165,7 +165,7 @@
 (define (apply-env var env) (cond
                                [(null? env)  "not in env"]
                                ;[(eq? (caar env) var) (cond (func? (caar env) (begin (display (caar env) (display "dzzzzzzz\n\n")  (cdar env))) (else  (cadr (value-of (caadar env) (car (cdadar env)))))) ]
-                               [(eq? (caar env) var) (cond   [(begin (display (cadar env)) (display "test\n\n") (func? (caadar env))) (cadar env)] 
+                               [(eq? (caar env) var) (cond   [(begin  (func? (caadar env))) (cadar env)] 
                                                             [else (cadr (value-of (caadar env) (car (cdadar env))))]) ]
                                [(apply-env var (cdr env))]
                                ))
@@ -338,7 +338,7 @@
 (define value-of
   
   (lambda (program env [p-u 0] [r-fr 0])
-    (begin (display env) (display "\n") (display program) (display "hrer\n\n")
+    (begin   
       (cond [(not (eq? "not in env" (apply-env 'return-value env))) (list env (apply-env 'return-value env))]
             [else (cond
      
@@ -469,7 +469,7 @@
 
                 [(func-call? program) (begin 
                                              (let ([func (apply-env (func-call->name program) env)])
-                                               (display  func ) (display "funcc\n\n") (display "\n\n")
+                                                 
                                                (list env (cadr (value-of (func->com func) (bound (func-call->args program) (func->vars func) (func->env func) env) 1)))))]
                 
                 [else (list env program)] 

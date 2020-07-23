@@ -73,7 +73,7 @@
            (function ((func lpar vars rpar lcbrack command rcbrack) (list 'func $3 $6)))
            (vars ((string) (list (string->symbol $1))) ((string camma vars) (append (list (string->symbol $1)) $3)))
            (call ((string lpar args rpar) (list 'call (string->symbol $1) $3)))
-           (args ((exp) (list $1)) ((exp camma args) (list (string->symbol $1) $3)))
+           (args ((exp) (list $1)) ((exp camma args) (append (list $1) $3)))
              )))
 
 ;
