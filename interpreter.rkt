@@ -310,9 +310,10 @@
   ) 
 
 
-(define (bound args vars env) (cond
+(define (bound args vars env current-env) (cond
                                 [(null? args) env]
-                                [else (bound (cdr args) (cdr vars) (cons (list (car vars) (list (car args) env)) env))]))   
+                                ;[else (bound (cdr args) (cdr vars)  (cons (list (car vars) (list (car args) current-env))) current-env)]))
+                                [else (bound (cdr args) (cdr vars) (extend-env (car vars) (list (car args) current-env) env) current-env)]))   
 
 
 ;interpreter
@@ -338,10 +339,12 @@
   
   (lambda (program env [p-u 0] [r-fr 0])
     (begin (display env) (display "\n") (display program) (display "hrer\n\n")
-    (cond
+      (cond [(not (eq? "not in env" (apply-env 'return-value env))) (list env (apply-env 'return-value env))]
+            [else (cond
+     
         [(eq? p-u 1) (cond
                        [(null? (cdr program)) (value-of (car program) env)]
-                       [(return? (car program)) (value-of (car program) env)]
+                       ;[(return? (car program)) (value-of (car program) env)]
                        [else (value-of (cdr program) (car (value-of (car program) env)) 1)])]
         [else (cond
                 [(or (number? program) (boolean? program) (string? program) (null? program)) (list env program)]
@@ -357,7 +360,8 @@
                                          (value-of (if-com->com2 program) env 1)))]
                 
                 ((assign? program) (list (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env)  null))
-                ((return? program)  (value-of (return->exp program) env))
+                ;((return? program)  (value-of (return->exp program) env))
+                ((return? program) (begin (define aux (value-of (return->exp program) env)) (list (extend-env 'return-value (list (cadr aux) '()) env) (cadr aux))))
                 
                 ((more? program) (let ([aexp1 (cadr (value-of (exp->aexp1 program) env))] [aexp2 (cadr (value-of (exp->aexp2 program) env))])
                                    (cond 
@@ -466,10 +470,10 @@
                 [(func-call? program) (begin 
                                              (let ([func (apply-env (func-call->name program) env)])
                                                (display  func ) (display "funcc\n\n") (display "\n\n")
-                                               (list env (cadr (value-of (func->com func) (bound (func-call->args program) (func->vars func) env) 1)))))]
+                                               (list env (cadr (value-of (func->com func) (bound (func-call->args program) (func->vars func) (func->env func) env) 1)))))]
                 
                 [else (list env program)] 
-                )])
+                )])])
 
     )
   
