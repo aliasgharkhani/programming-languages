@@ -153,7 +153,7 @@
                                          
                                      ))
 (define init-env '((listmaker ((func (a b) ((if (less? (var a) 1) ((return ())) ((assign a (call listmaker ((sub (var a) 1) (var b)))) (return (add (var a) ((var b)))))))) ((pow ((func (a b) ((if (equal? (var b) 0) ((return 1)) ((assign result (call pow ((var a) (sub (var b) 1)))) (return (mult (var result) (var a))))))) ()))))) (pow ((func (a b) ((if (equal? (var b) 0) ((return 1)) ((assign result (call pow ((var a) (sub (var b) 1)))) (return (mult (var result) (var a))))))) ()))))
-
+(define lib-env '((pow (define pow (lambda (a b) (if (eq? b 0) 1 (* a (pow a (- b 1))))))) (makelist (define makelist (lambda (a b)(cond[(<= a 0) '()][else (cons b (makelist (- a 1) b))])))) (reverse (define reverse (lambda (a) (cond [(null? a) a] [else (append (reverse (cdr a)) (list (car a)))])))) (reverseall (define reverseall (lambda (a) (cond [(null? a) a] [else (let ((head (car a)) (tail (cdr a))) (append (reverseall tail) (cond [(list? head) (list (reverseall head))] [else (list head)]) ))])))) (set (define set (lambda (a index value) (cond [(null? a) "list index outof range"] [(eq? index 0) (cons value (cdr a))] [else (let ((aux (set (cdr a) (- index 1) value))) (if (eq? aux "list index outof range") "list index outof range" ((cons (car a) aux))))])))) (merge (define merge (lambda (a b) (cond [(null? a) b] [(null? b) a] [(> (car a) (car b)) (cons (car b) (merge a (cdr b)))] [else (cons (car a) (merge (cdr a) b))])))) (mergesort (define (mergesort vs) (match vs [(list)  vs] [(list a)  vs] [_  (define-values (lvs rvs) (split-at vs (quotient (length vs) 2))) (merge (mergesort lvs) (mergesort rvs))])))))
 
 (define (extend-env var value env) (cond
                                      [(null? env) (list (list var value))]
@@ -161,6 +161,12 @@
                                      ;[else (begin (append (before-and-after var env)  (list (list var value))))]
                                      [else (begin     (append  (list (list var value)) env))]
                                      ))
+(define (apply-lib-env var env) (cond
+                               [(null? env)  "not in env"]
+                               ;[(eq? (caar env) var) (cond (func? (caar env) (begin (display (caar env) (display "dzzzzzzz\n\n")  (cdar env))) (else  (cadr (value-of (caadar env) (car (cdadar env)))))) ]
+                               [(eq? (caar env) var) (cadar env)]
+                               [else (apply-lib-env var (cdr env))]
+                               ))
 
 
 (define (apply-env var env) (cond
@@ -168,7 +174,7 @@
                                ;[(eq? (caar env) var) (cond (func? (caar env) (begin (display (caar env) (display "dzzzzzzz\n\n")  (cdar env))) (else  (cadr (value-of (caadar env) (car (cdadar env)))))) ]
                                [(eq? (caar env) var) (cond   [(begin  (func? (caadar env))) (cadar env)] 
                                                             [else (cadr (value-of (caadar env) (car (cdadar env))))]) ]
-                               [(apply-env var (cdr env))]
+                               [else (apply-env var (cdr env))]
                                ))
 
 (define (list-greater-than-number ls number)(cond
@@ -471,10 +477,12 @@
                 [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                 [(par? program) (value-of (cexp->exp program) env)]
 
-                [(func-call? program) (begin 
-                                             (let ([func (apply-env (func-call->name program) env)])
-                                               (display env) (display "\n\n")  
-                                               (list env (cadr (value-of (func->com func) (extend-env (func-call->name program) func (bound (func-call->args program) (func->vars func) (func->env func) env)) 1)))))]
+                [(func-call? program) (begin (display (apply-lib-env (func-call->name program) lib-env)) (display "\n\n") (display (cons (func-call->name program) (list (func-call->args program)))) (cond
+                                               [(not (eq? (apply-lib-env (func-call->name program) lib-env) "not in env")) (begin (eval (apply-lib-env (func-call->name program) lib-env)) (list env (eval (cons (func-call->name program) (func-call->args program)))))]
+                                               [else (let ([func (apply-env (func-call->name program) env)])
+                                               ;(display env) (display "\n\n")  
+                                               (list env (cadr (value-of (func->com func) (extend-env (func-call->name program) func (bound (func-call->args program) (func->vars func) (func->env func) env)) 1))))]
+                                             ))]
                 
                 ;[else (list env program)]
                 [else (cond
