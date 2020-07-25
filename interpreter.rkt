@@ -477,8 +477,8 @@
                 [(var-listmem? program) (list env (list-index (apply-env (cexp->var program) env) (values (make-indices (cexp->listmem program)) env) ))]
                 [(par? program) (value-of (cexp->exp program) env)]
 
-                [(func-call? program) (begin (display (apply-lib-env (func-call->name program) lib-env)) (display "\n\n") (display (cons (func-call->name program) (list (func-call->args program)))) (cond
-                                               [(not (eq? (apply-lib-env (func-call->name program) lib-env) "not in env")) (begin (eval (apply-lib-env (func-call->name program) lib-env)) (list env (eval (cons (func-call->name program) (func-call->args program)))))]
+                [(func-call? program) (begin (cond
+                                               [(not (eq? (apply-lib-env (func-call->name program) lib-env) "not in env")) (begin (eval (apply-lib-env (func-call->name program) lib-env)) (list env (eval (cons (func-call->name program) (cond [(list? (car (func-call->args program))) (list (cons 'list (car (func-call->args program))))] [else (func-call->args program)])))))]
                                                [else (let ([func (apply-env (func-call->name program) env)])
                                                ;(display env) (display "\n\n")  
                                                (list env (cadr (value-of (func->com func) (extend-env (func-call->name program) func (bound (func-call->args program) (func->vars func) (func->env func) env)) 1))))]
