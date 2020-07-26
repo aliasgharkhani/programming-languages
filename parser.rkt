@@ -23,7 +23,7 @@
             ;("string" (token-string (lexeme)))
             ((:or (:+ (char-range #\0 #\9)) (:: (:+ (char-range #\0 #\9)) #\. (:+ (char-range #\0 #\9)))) (token-posnumber (string->number lexeme)))
             ((:+ (char-range #\A #\Z) (char-range #\a #\z)) (token-string lexeme))
-            ;(any-string (token-string lexeme))
+            ((:: #\" (:+ (:~ #\")) #\") (token-mystring lexeme))
             ("+" (token-pos))
             ("==" (token-eq))
             ("=" (token-eq-assign))
@@ -42,12 +42,13 @@
             ("\"" (token-qotation))
             ("{" (token-lcbrack))
             ("}" (token-rcbrack))
+            ("'" (token-ali))
             
             (whitespace (simple-math-lexer input-port))
             ((eof) (token-EOF))))
 
-(define-tokens a (string posnumber))
-(define-empty-tokens b (EOF pos neg eq-assign eq mult div less more neq lpar rpar lbrack rbrack if semicolon camma while do end then else endif returnt null true false qotation func lcbrack rcbrack))
+(define-tokens a (string posnumber mystring))
+(define-empty-tokens b (EOF pos ali neg eq-assign eq mult div less more neq lpar rpar lbrack rbrack if semicolon camma while do end then else endif returnt null true false qotation func lcbrack rcbrack))
 
 
 (define simple-math-parser
@@ -64,9 +65,9 @@
            (assign ((string eq-assign exp) (list 'assign (string->symbol $1) $3)) ((string eq-assign function) (list 'assign (string->symbol $1) $3)) ((string eq-assign call) (list 'assign (string->symbol $1) $3)) ((string eq exp) (raise "use = for assigning not ==")))
            (return ((returnt exp) (list 'return $2)))
            (exp ((aexp) $1) ((aexp more aexp) (list 'more? $1 $3)) ((aexp less aexp) (list 'less? $1 $3)) ((aexp eq aexp) (list 'equal? $1 $3)) ((aexp neq aexp) (list 'nequal? $1 $3)))
-           (aexp ((bexp) $1) ((bexp neg aexp) (list 'sub $1 $3)) ((bexp pos aexp) (list 'add $1 $3)))
-           (bexp ((cexp) $1) ((cexp mult bexp) (list 'mult $1 $3)) ((cexp div bexp) (list 'div $1 $3)))
-           (cexp ((neg cexp) (list '- $2)) ((lpar exp rpar) (list 'par $2)) ((posnumber) $1) ((null) 'null) ((string) (list 'var (string->symbol $1))) ((true) '#t) ((false) '#f) ((qotation string qotation) $2) ((list) $1) ((string listmem) (list 'list-ref (string->symbol $1) $2)))
+           (aexp ((bexp neg aexp) (list 'sub $1 $3)) ((bexp pos aexp) (list 'add $1 $3)) ((bexp) $1))
+           (bexp ((cexp mult bexp) (list 'mult $1 $3)) ((cexp div bexp) (list 'div $1 $3)) ((cexp) $1))
+           (cexp ((neg cexp) (list '- $2)) ((lpar exp rpar) (list 'par $2)) ((posnumber) $1) ((null) 'null) ((string) (list 'var (string->symbol $1))) ((true) '#t) ((false) '#f) ((mystring) (string-replace $1 "\"" "")) ((list) $1) ((string listmem) (list 'list-ref (string->symbol $1) $2)))
            (list ((lbrack listvalues rbrack) $2) ((lbrack rbrack) (list)))
            (listvalues ((exp) (list $1)) ((exp camma listvalues) (append (list $1) $3)))
            (listmem ((lbrack exp rbrack) (list $2)) ((lbrack exp rbrack listmem) (list $2 $4)))

@@ -327,7 +327,7 @@
 
 
 (define run 
-  (lambda (string)
+  (lambda (string) 
     (cadr (value-of (my-parser string) init-env 1))))
 
 (define value-of-program
@@ -366,10 +366,12 @@
                                          (value-of (if-com->com1 program) env 1)
                                          (value-of (if-com->com2 program) env 1)))]
                 
-                ((assign? program) (cond
+                ((assign? program) (begin (list (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env)  null))
+                 ;(cond
                                      ;[(func? (assign->exp program)) (list (extend-env (assign->var program)  (begin ( list (assign->exp program) (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env))) env)  null)]
-                                     [#t (list (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env)  null)]
-                                     ))
+                                     ;[#t (list (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env)  null)]
+                                     ;)
+                                   )
                 ;((return? program)  (value-of (return->exp program) env))
                 ((return? program) (begin (define aux (value-of (return->exp program) env)) (list (extend-env 'return-value (list (cadr aux) '()) env) (cadr aux))))
                 
