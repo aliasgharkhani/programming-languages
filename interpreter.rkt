@@ -512,7 +512,8 @@
                                                                                                                                                                   [#t  (quote (func-call->args program))])))))])]
                                                [else (let ([func (apply-env (func-call->name program) env)])
                                                ;(display env) (display "\n\n")  
-                                               (list env (cadr (value-of (func->com func) (extend-env (func-call->name program) func (bound (func-call->args program) (func->vars func) (func->env func) env)) 1))))]
+                                               ;(list env (begin (display env) (display "\n\n") (cadr (value-of (func->com func) (extend-env (func-call->name program) func (bound (func-call->args program) (func->vars func) (func->env func) env)) 1)))))]
+                                               (list env (cadr (value-of (func->com func) (bound (func-call->args program) (func->vars func) (func->env func) env) 1))))]
                                              ))]
                 
                 ;[else (list env program)]
