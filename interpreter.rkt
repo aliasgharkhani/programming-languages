@@ -328,6 +328,15 @@
                                 [else (bound (cdr args) (cdr vars) (extend-env (car vars) (list (car args) current-env) env) current-env)]))   
 
 
+(define pow (lambda (a b) (if (eq? b 0) 1 (* a (pow a (- b 1))))))
+(define makelist (lambda (a b)(cond[(<= a 0) '()][else (cons b (makelist (- a 1) b))])))
+(define reverse (lambda (a) (cond [(null? a) a] [else (append (reverse (cdr a)) (list (car a)))])))
+(define reverseall (lambda (a) (cond [(null? a) a] [else (let ((head (car a)) (tail (cdr a))) (append (reverseall tail) (cond [(list? head) (list (reverseall head))] [else (list head)]) ))])))
+(define set (lambda (a index value) (cond [(null? a) "list index outof range"] [(eq? index 0) (cons value (cdr a))] [else (let ((aux (set (cdr a) (- index 1) value))) (if (eq? aux "list index outof range") "list index outof range" ((cons (car a) aux))))])))
+(define merge (lambda (a b) (cond [(null? a) b] [(null? b) a] [(> (car a) (car b)) (cons (car b) (merge a (cdr b)))] [else (cons (car a) (merge (cdr a) b))])))
+(define (mergesort vs) (match vs [(list)  vs] [(list a)  vs] [_  (define-values (lvs rvs) (split-at vs (quotient (length vs) 2))) (merge (mergesort lvs) (mergesort rvs))]))
+
+
 ;interpreter
 
 
@@ -489,11 +498,18 @@
 
                 [(func-call? program) (begin (cond
                                                [(not (eq? (apply-lib-env (func-call->name program) lib-env) "not in env")) (cond [(eq? (func-call->name program) 'eval)  (list env (run (car (func-call->args program))))]
+                                                                                                                                 [(eq? (func-call->name program) 'reverse)  (list env (reverse (car (func-call->args program))))]
+                                                                                                                                 [(eq? (func-call->name program) 'reverseall)  (list env (reverseall (car (func-call->args program))))]
+                                                                                                                                 [(eq? (func-call->name program) 'pow)  (list env (pow (car (func-call->args program)) (cadr (func-call->args program))))]
+                                                                                                                                 [(eq? (func-call->name program) 'merge)   (list env (merge (car (cadr (value-of (func-call->args program) env))) (cadr (value-of (cadr (func-call->args program)) env))))]
+                                                                                                                                 [(eq? (func-call->name program) 'mergesort)  (list env (mergesort (cadr (value-of (car (func-call->args program)) env))))]
+                                                                                                                                 [(eq? (func-call->name program) 'set)  (list env (set (cadr (value-of (car (func-call->args program)) env))))]
+                                                                                                                                 [(eq? (func-call->name program) 'makelist)   (list env (makelist (car (cadr (value-of (func-call->args program) env))) (cadr (value-of (cadr (func-call->args program)) env))))]
                                                                                                                                  [else (begin (eval (apply-lib-env (func-call->name program) lib-env))
                                                                                                                                           (list env (eval (cons (func-call->name program)
                                                                                                                                                                 (cond
-                                                                                                                                                                  [(list? (car (func-call->args program))) (list (cons 'list (car (func-call->args program))))]
-                                                                                                                                                                  [else (func-call->args program)])))))])]
+                                                                                                                                                                  ;[(list? (car (func-call->args program))) (list (cons 'list (car (func-call->args program))))]
+                                                                                                                                                                  [#t  (quote (func-call->args program))])))))])]
                                                [else (let ([func (apply-env (func-call->name program) env)])
                                                ;(display env) (display "\n\n")  
                                                (list env (cadr (value-of (func->com func) (extend-env (func-call->name program) func (bound (func-call->args program) (func->vars func) (func->env func) env)) 1))))]
