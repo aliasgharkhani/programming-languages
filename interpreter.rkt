@@ -322,10 +322,10 @@
   ) 
 
 
-(define (bound args vars env current-env) (cond
-                                [(null? args) env]
+(define (bound args vars func-env current-env) (cond
+                                [(null? args) func-env]
                                 ;[else (bound (cdr args) (cdr vars)  (cons (list (car vars) (list (car args) current-env))) current-env)]))
-                                [else (bound (cdr args) (cdr vars) (extend-env (car vars) (list (car args) current-env) env) current-env)]))   
+                                [else (bound (cdr args) (cdr vars) (extend-env (car vars) (list (car args) current-env) func-env) current-env)]))   
 
 
 (define pow (lambda (a b) (if (eq? b 0) 1 (* a (pow a (- b 1))))))
@@ -381,10 +381,10 @@
                                          (value-of (if-com->com2 program) env 1)))]
                 
                 ((assign? program) (begin (list (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env)  null))
-                 ;(cond
-                                     ;[(func? (assign->exp program)) (list (extend-env (assign->var program)  (begin ( list (assign->exp program) (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env))) env)  null)]
-                                     ;[#t (list (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env)  null)]
-                                     ;)
+                                   ;(cond
+                                    ; [(func? (assign->exp program)) (list (extend-env (assign->var program)  (begin ( list (assign->exp program) (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env))) env)  null)]
+                                    ; [else (list (extend-env (assign->var program)  (begin ( list (assign->exp program) env)) env)  null)]
+                                    ; )
                                    )
                 ;((return? program)  (value-of (return->exp program) env))
                 ((return? program) (begin (define aux (value-of (return->exp program) env)) (list (extend-env 'return-value (list (cadr aux) '()) env) (cadr aux))))
@@ -512,8 +512,9 @@
                                                                                                                                                                   [#t  (quote (func-call->args program))])))))])]
                                                [else (let ([func (apply-env (func-call->name program) env)])
                                                ;(display env) (display "\n\n")  
-                                               ;(list env (begin (display env) (display "\n\n") (cadr (value-of (func->com func) (extend-env (func-call->name program) func (bound (func-call->args program) (func->vars func) (func->env func) env)) 1)))))]
-                                               (list env (cadr (value-of (func->com func) (bound (func-call->args program) (func->vars func) (func->env func) env) 1))))]
+                                               (list env (begin  (cadr (value-of (func->com func) (extend-env (func-call->name program) func (bound (func-call->args program) (func->vars func) (func->env func) env)) 1)))))]
+                                               ;(list env (cadr (value-of (func->com func) (bound (func-call->args program) (func->vars func) (func->env func) env) 1))))]
+                                               ;(list env (begin (cadr (value-of (func->com func) (bound (func-call->args program) (func->vars func) (func->env func) env) 1)))))]
                                              ))]
                 
                 ;[else (list env program)]
