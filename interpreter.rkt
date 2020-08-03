@@ -153,7 +153,13 @@
                                          
                                      ))
 (define init-env '((listmaker ((func (a b) ((if (less? (var a) 1) ((return ())) ((assign a (call listmaker ((sub (var a) 1) (var b)))) (return (add (var a) ((var b)))))))) ((pow ((func (a b) ((if (equal? (var b) 0) ((return 1)) ((assign result (call pow ((var a) (sub (var b) 1)))) (return (mult (var result) (var a))))))) ()))))) (pow ((func (a b) ((if (equal? (var b) 0) ((return 1)) ((assign result (call pow ((var a) (sub (var b) 1)))) (return (mult (var result) (var a))))))) ()))))
-(define lib-env '((eval 1) (pow (define pow (lambda (a b) (if (eq? b 0) 1 (* a (pow a (- b 1))))))) (makelist (define makelist (lambda (a b)(cond[(<= a 0) '()][else (cons b (makelist (- a 1) b))])))) (reverse (define reverse (lambda (a) (cond [(null? a) a] [else (append (reverse (cdr a)) (list (car a)))])))) (reverseall (define reverseall (lambda (a) (cond [(null? a) a] [else (let ((head (car a)) (tail (cdr a))) (append (reverseall tail) (cond [(list? head) (list (reverseall head))] [else (list head)]) ))])))) (set (define set (lambda (a index value) (cond [(null? a) "list index outof range"] [(eq? index 0) (cons value (cdr a))] [else (let ((aux (set (cdr a) (- index 1) value))) (if (eq? aux "list index outof range") "list index outof range" ((cons (car a) aux))))])))) (merge (define merge (lambda (a b) (cond [(null? a) b] [(null? b) a] [(> (car a) (car b)) (cons (car b) (merge a (cdr b)))] [else (cons (car a) (merge (cdr a) b))])))) (mergesort (define (mergesort vs) (match vs [(list)  vs] [(list a)  vs] [_  (define-values (lvs rvs) (split-at vs (quotient (length vs) 2))) (merge (mergesort lvs) (mergesort rvs))])))))
+(define lib-env '((eval 1) (pow (define pow (lambda (a b) (if (eq? b 0) 1 (* a (pow a (- b 1)))))))
+                           (makelist (define makelist (lambda (a b)(cond[(<= a 0) '()][else (cons b (makelist (- a 1) b))]))))
+                           (reverse (define reverse (lambda (a) (cond [(null? a) a] [else (append (reverse (cdr a)) (list (car a)))]))))
+                           (reverseall (define reverseall (lambda (a) (cond [(null? a) a] [else (let ((head (car a)) (tail (cdr a))) (append (reverseall tail) (cond [(list? head) (list (reverseall head))] [else (list head)]) ))]))))
+                           (set (define set (lambda (a index value) (cond [(null? a) "list index outof range"] [(eq? index 0) (cons value (cdr a))] [else (let ((aux (set (cdr a) (- index 1) value))) (if (eq? aux "list index outof range") "list index outof range" ((cons (car a) aux))))]))))
+                           (merge (define merge (lambda (a b) (cond [(null? a) b] [(null? b) a] [(> (car a) (car b)) (cons (car b) (merge a (cdr b)))] [else (cons (car a) (merge (cdr a) b))]))))
+                           (mergesort (define (mergesort vs) (match vs [(list)  vs] [(list a)  vs] [_  (define-values (lvs rvs) (split-at vs (quotient (length vs) 2))) (merge (mergesort lvs) (mergesort rvs))])))))
 
 (define (extend-env var value env) (cond
                                      [(null? env) (list (list var value))]
@@ -289,10 +295,9 @@
 
 
 (define (reverse-list x) (cond
-                           [ (null? x) '()]
-                           [ else (cond [(list? (car x)) (append (reverse-list (cdr x)) (list (reverse-list (car x))))]
-                                       [else  (append (reverse-list (cdr x)) (list (car x)))])]))
-
+                           [(null? x) '()]
+                           [else (cond [(list? (car x)) (append (list (reverse-list (car x))) (reverse-list (cdr x)))]
+                                       [else  (append  (list (- 0 (car x))) (reverse-list (cdr x)))])]))
 
 (define (compare-error first second)(cond
                                       [(and (number? first) (list? second)) (raise "Error! Cannot compare number and list.")]
@@ -449,17 +454,20 @@
                                     )
                                   ))
                 
-                ((mult? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))] )
+                ((mult? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))])
                                    (cond
-                                     [(eq? cexp 0) 0]
-                                     [(eq? cexp #f) #f]
-                                     [(and (number? cexp) (number? bexp)) (list env (* cexp bexp))]                                
-                                     [(and (boolean? cexp) (boolean? bexp)) (list env (and cexp bexp))]
-                                     [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]                                
-                                     [(and (number? cexp) (list? bexp)) (list env (mul-list-num bexp cexp))]
-                                     [(and (list? cexp) (number? bexp)) (list env (mul-list-num cexp bexp))]
-                                     [(and (boolean? cexp) (list? bexp)) (list env (bool-mul-list bexp cexp))]
-                                     [(and (list? cexp) (boolean? bexp)) (list env (bool-mul-list cexp bexp))]                             
+                                     [(eq? cexp 0) (list env 0)]
+                                     [(eq? cexp #f) (list env #f)]
+                                     [else (let ([bexp (cadr (value-of (bexp->bexp program) env))]) (cond
+                                                                                                      [(and (number? cexp) (number? bexp)) (list env (* cexp bexp))]                                
+                                                                                                      [(and (boolean? cexp) (boolean? bexp)) (list env (and cexp bexp))]
+                                                                                                      [(and (string? cexp) (string? bexp)) (list env (string-append cexp bexp))]                                
+                                                                                                      [(and (number? cexp) (list? bexp)) (list env (mul-list-num bexp cexp))]
+                                                                                                      [(and (list? cexp) (number? bexp)) (list env (mul-list-num cexp bexp))]
+                                                                                                      [(and (boolean? cexp) (list? bexp)) (list env (bool-mul-list bexp cexp))]
+                                                                                                      [(and (list? cexp) (boolean? bexp)) (list env (bool-mul-list cexp bexp))]                             
+                                                                                                      ))]
+                                     
                                      )                                
                                    ))
                 ((div? program) (let ([cexp (cadr (value-of (bexp->cexp program) env))] [bexp (cadr (value-of (bexp->bexp program) env))])
